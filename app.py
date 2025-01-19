@@ -3,6 +3,7 @@ import os
 import librosa
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -10,6 +11,9 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'wav'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Dummy Data storage (Replace with actual database storage if necessary)
+uploaded_files = {}
 
 
 def allowed_file(filename):
@@ -35,8 +39,12 @@ def upload_file():
         # Process the file (dummy classification logic for now)
         sound_type = classify_sound(file_path)
 
+        # Store the file and its classification
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        uploaded_files[filename] = {'sound_type': sound_type, 'timestamp': timestamp}
+
         # Return the sound type and timestamp
-        return jsonify({'sound_type': sound_type, 'timestamp': filename.split('_')[1]})
+        return jsonify({'sound_type': sound_type, 'timestamp': timestamp})
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
@@ -54,14 +62,42 @@ def classify_sound(file_path):
         return "Other Noise"
 
 
+@app.route('/generate_day_overview', methods=['GET'])
+def generate_day_overview():
+    # Example: Generate Day overview (filtering by today's date)
+    today = datetime.today().strftime("%Y-%m-%d")
+
+    day_data = [
+        {"filename": filename, "sound_type": info["sound_type"], "timestamp": info["timestamp"]}
+        for filename, info in uploaded_files.items()
+        if info["timestamp"].startswith(today)
+    ]
+
+    return jsonify({"day_overview": day_data})
+
+
+@app.route('/generate_week_overview', methods=['GET'])
+def generate_week_overview():
+    # Example: Generate Week overview (filtering by the last 7 days)
+    week_start = (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    week_data = [
+        {"filename": filename, "sound_type": info["sound_type"], "timestamp": info["timestamp"]}
+        for filename, info in uploaded_files.items()
+        if info["timestamp"] >= week_start
+    ]
+
+    return jsonify({"week_overview": week_data})
+
+
 @app.route('/generate_plot', methods=['GET'])
 def generate_plot():
-    # Example: Generate a plot of the baby's sleep patterns (dummy data for now)
+    # Example: Generate a simple plot for the baby's sleep patterns (dummy data)
     plot_filename = "plot.png"
     plot_path = os.path.join('static', plot_filename)
 
     # Plot generation code (e.g., using matplotlib)
-    plt.plot([1, 2, 3, 4, 5], [10, 20, 25, 30, 40])
+    plt.plot([1, 2, 3, 4, 5], [10, 20, 25, 30, 40])  # Dummy data for visualization
     plt.title("Nightly Overview")
     plt.xlabel("Time")
     plt.ylabel("Sleep Events")

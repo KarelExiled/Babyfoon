@@ -194,7 +194,6 @@
             <h1>Baby Sleep Analysis</h1>
             <p>Monitor your baby's sleep patterns with sound analysis</p>
         </div>
-        <div class="wave-animation"></div>
     </section>
 
     <section>
@@ -210,6 +209,17 @@
                 <p>Overview of nightly sleep patterns</p>
                 <img id="nightly_plot" src="" alt="Nightly Plot" style="display:none;">
             </div>
+        </div>
+
+        <!-- New Section for Day and Week Overview -->
+        <div class="overview-container">
+            <h3>Day Overview</h3>
+            <button id="day-overview-btn">Generate Day Overview</button>
+            <div id="day-overview"></div>
+
+            <h3>Week Overview</h3>
+            <button id="week-overview-btn">Generate Week Overview</button>
+            <div id="week-overview"></div>
         </div>
     </section>
 
@@ -256,6 +266,32 @@ document.getElementById('upload-form').addEventListener('submit', function(event
         const plotImg = document.getElementById('nightly_plot');
         plotImg.src = '/static/' + data.plot;
         plotImg.style.display = 'block';
+    });
+});
+
+// Fetch Day Overview
+document.getElementById('day-overview-btn').addEventListener('click', function() {
+    fetch('/generate_day_overview')
+    .then(response => response.json())
+    .then(data => {
+        const overviewDiv = document.getElementById('day-overview');
+        overviewDiv.innerHTML = '';
+        data.day_overview.forEach(item => {
+            overviewDiv.innerHTML += `<p>File: ${item.filename}, Type: ${item.sound_type}, Time: ${item.timestamp}</p>`;
+        });
+    });
+});
+
+// Fetch Week Overview
+document.getElementById('week-overview-btn').addEventListener('click', function() {
+    fetch('/generate_week_overview')
+    .then(response => response.json())
+    .then(data => {
+        const overviewDiv = document.getElementById('week-overview');
+        overviewDiv.innerHTML = '';
+        data.week_overview.forEach(item => {
+            overviewDiv.innerHTML += `<p>File: ${item.filename}, Type: ${item.sound_type}, Time: ${item.timestamp}</p>`;
+        });
     });
 });
 </script>
