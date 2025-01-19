@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Analysis</title>
+    <title>Baby Monitor Analysis</title>
     <style>
         /* Root Variables */
         :root {
@@ -212,11 +212,8 @@
 <main>
     <section class="hero">
         <div class="hero-content">
-            <h1>Upload Your Audio File for Analysis</h1>
-            <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
-                <input type="file" name="audio" accept=".wav,.mp3" required>
-                <button type="submit" class="cta-button">Upload File</button>
-            </form>
+            <h1>Baby Sleep Analysis</h1>
+            <p>Monitor your baby's sleep patterns with sound analysis</p>
         </div>
         <div class="wave-animation"></div>
     </section>
@@ -226,8 +223,8 @@
         <div class="dashboard-container">
             <div class="sound-analysis-panel" id="sound-analysis">
                 <h3>Sound Analysis</h3>
-                <p>Sound Type: <span id="sound-type"></span></p>
-                <p>Timestamp: <span id="sound-time"></span></p>
+                <p>Sound Type: <span id="sound-type">N/A</span></p>
+                <p>Timestamp: <span id="sound-time">N/A</span></p>
             </div>
             <div class="nightly-overview-panel" id="nightly-overview">
                 <h3>Nightly Overview</h3>

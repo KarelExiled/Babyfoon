@@ -4,9 +4,7 @@ import librosa
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pydub import AudioSegment
 import time
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 
 app = Flask(__name__)
@@ -21,6 +19,20 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 sound_labels = ['crying', 'ambient', 'laughter', 'noise']
 label_encoder = LabelEncoder()
 label_encoder.fit(sound_labels)
+
+# Data to simulate night sounds and sleep patterns
+night_sounds = [
+    {"timestamp": "2025-01-13_22:15", "sound_type": "ambient"},
+    {"timestamp": "2025-01-13_23:02", "sound_type": "crying"},
+    {"timestamp": "2025-01-14_01:17", "sound_type": "laughter"},
+    {"timestamp": "2025-01-14_05:30", "sound_type": "ambient"},
+    {"timestamp": "2025-01-15_00:40", "sound_type": "crying"},
+    {"timestamp": "2025-01-16_03:25", "sound_type": "ambient"},
+    {"timestamp": "2025-01-16_04:03", "sound_type": "crying"},
+    {"timestamp": "2025-01-17_21:58", "sound_type": "ambient"},
+    {"timestamp": "2025-01-18_03:15", "sound_type": "crying"},
+    {"timestamp": "2025-01-18_22:45", "sound_type": "laughter"},
+]
 
 
 # Fake sound classification function (can be replaced with actual sound classifier)
@@ -39,43 +51,13 @@ def classify_sound(audio_file):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'audio' not in request.files:
-        return jsonify({"error": "No file part"})
-
-    file = request.files['audio']
-
-    if file.filename == '':
-        return jsonify({"error": "No selected file"})
-
-    # Save the file
-    timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"Sound_{timestamp}.wav"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-
-    # Classify the sound
-    sound_type = classify_sound(filepath)
-
-    # Example: Return data about the sound (time, type)
-    analysis_data = {
-        "timestamp": timestamp,
-        "sound_type": sound_type,
-        "filename": filename
-    }
-
-    return jsonify(analysis_data)
+    return render_template('index.html', sounds=night_sounds)
 
 
 @app.route('/generate_plot', methods=['GET'])
 def generate_plot():
-    # Fake nightly overview for demo
-    times = ['10:00', '12:00', '02:00', '04:00']
-    sounds = ['ambient', 'crying', 'laughter', 'ambient']
+    # Extract sound types and counts for the plot
+    sounds = [entry['sound_type'] for entry in night_sounds]
 
     # Generate a simple bar plot for sounds
     plt.figure(figsize=(10, 5))
