@@ -1,0 +1,7 @@
+Flask==2.2.5          # Latest stable version as of January 2025
+requests==2.31.0      # Latest stable version
+matplotlib==3.7.2     # Latest version compatible with Python 3.11
+numpy>=1.24.0,<2.0.0  # Compatible with Python 3.11
+scipy>=1.11.0,<2.0.0  # Updated for Python 3.11
+gunicorn==20.1.0      # Latest stable version
+librosa==0.10.0.post2 # For audio processing; compatible with Python 3.11
