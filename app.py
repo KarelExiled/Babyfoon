@@ -11,6 +11,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'wav'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['STATIC_FOLDER'] = 'static'
 
 # Dummy Data storage (Replace with actual database storage if necessary)
 uploaded_files = {}
@@ -94,7 +95,7 @@ def generate_week_overview():
 def generate_plot():
     # Example: Generate a simple plot for the baby's sleep patterns (dummy data)
     plot_filename = "plot.png"
-    plot_path = os.path.join('static', plot_filename)
+    plot_path = os.path.join(app.config['STATIC_FOLDER'], plot_filename)
 
     # Plot generation code (e.g., using matplotlib)
     plt.plot([1, 2, 3, 4, 5], [10, 20, 25, 30, 40])  # Dummy data for visualization
