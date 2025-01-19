@@ -1,166 +1,288 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Babyfoon Plus - Advanced Baby Monitoring Solution</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="js/main.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Analysis</title>
+    <style>
+        /* Root Variables */
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #2C3E50;
+            --accent-color: #27AE60;
+            --background-color: #F5F6FA;
+            --text-color: #2C3E50;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        header {
+            background-color: white;
+            box-shadow: var(--card-shadow);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        main {
+            padding-top: 80px;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            z-index: 1;
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Wave animation for hero section */
+        .wave-animation {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='1' d='M0,96L48,112C96,128,192,160,288,170.7C384,181,480,171,576,144C672,117,768,75,864,64C960,53,1056,75,1152,96C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            animation: wave 10s linear infinite;
+        }
+
+        @keyframes wave {
+            0% {
+                background-position-x: 0;
+            }
+            100% {
+                background-position-x: 1440px;
+            }
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .sound-analysis-panel,
+        .nightly-overview-panel {
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
+
+<header>
     <nav>
-      <div class="logo">
-        <svg width="40" height="40" viewBox="0 0 40 40">
-          <circle cx="20" cy="20" r="18" fill="#4A90E2"/>
-          <path d="M20 10C15 10 11 14 11 19C11 24 15 28 20 28C25 28 29 24 29 19" stroke="white" fill="none" stroke-width="2"/>
-          <circle cx="20" cy="19" r="4" fill="white"/>
-        </svg>
-        <span>Babyfoon Plus</span>
-      </div>
-      <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#technical">Technical</a></li>
-        <li><a href="#dashboard">Dashboard</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main>
-    <section id="home" class="hero">
-      <div class="hero-content">
-        <h1>Welcome to the Future of Baby Monitoring</h1>
-        <p>Advanced noise filtering • Reliable VoIP • Real-time analytics</p>
-        <a href="#dashboard" class="cta-button">View Live Dashboard</a>
-      </div>
-      <div class="wave-animation"></div>
-    </section>
-
-    <section id="about" class="about">
-      <h2>About Babyfoon Plus</h2>
-      <div class="grid-container">
-        <div class="card">
-          <h3>Introduction</h3>
-          <p>Babyfoon Plus revolutionizes baby monitoring with cutting-edge technology and user-centric design.</p>
+        <div class="logo">
+            <span>Audio Analysis</span>
         </div>
-        <div class="card">
-          <h3>Current Situation</h3>
-          <p>Traditional monitors lack advanced features and suffer from interference issues.</p>
-        </div>
-        <div class="card">
-          <h3>Our Solution</h3>
-          <p>Innovative noise filtering and stable connectivity for peace of mind.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="features" class="features">
-      <h2>Features & Specifications</h2>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon" id="dashboard-icon"></div>
-          <h3>Smart Dashboard</h3>
-          <p>Real-time monitoring and intuitive controls</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon" id="analytics-icon"></div>
-          <h3>Advanced Analytics</h3>
-          <p>Comprehensive data analysis and insights</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon" id="mobile-icon"></div>
-          <h3>Mobile Interface</h3>
-          <p>Access from anywhere, anytime</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="technical" class="technical">
-      <h2>Technical Overview</h2>
-      <div class="tech-container">
-        <div class="system-design">
-          <h3>System Architecture</h3>
-          <div id="architecture-diagram"></div>
-        </div>
-        <div class="components">
-          <h3>Key Components</h3>
-          <ul>
-            <li>ESP32 Microcontroller</li>
-            <li>IIR Noise Filters</li>
-            <li>MySQL Database</li>
-            <li>Web Interface</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section id="dashboard" class="dashboard">
-      <h2>Sleep Analysis Dashboard</h2>
-      <div class="dashboard-container">
-        <div class="sleep-stats-panel">
-          <h3>Sleep Statistics</h3>
-          <div id="sleep-stats" class="stats-grid"></div>
-        </div>
-        
-        <div class="sound-analysis-panel">
-          <h3>Sound Level Analysis</h3>
-          <canvas id="soundChart"></canvas>
-        </div>
-        
-        <div class="nightly-overview-panel">
-          <h3>Nightly Sleep Pattern</h3>
-          <canvas id="nightlyOverview"></canvas>
-        </div>
-        
-        <div class="sound-classification-panel">
-          <h3>Sound Classification</h3>
-          <canvas id="soundClassification"></canvas>
-        </div>
-
-        <div class="week-overview-panel">
-          <h3>Weekly Sleep Pattern</h3>
-          <div class="week-overview-container">
-            <canvas id="weekOverview" style="height: 300px;"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" class="contact">
-      <h2>Contact Us</h2>
-      <form id="contact-form">
-        <input type="text" placeholder="Name" required>
-        <input type="email" placeholder="Email" required>
-        <textarea placeholder="Message" required></textarea>
-        <button type="submit">Send Message</button>
-      </form>
-    </section>
-  </main>
-
-  <footer>
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4>Babyfoon Plus</h4>
-        <p>Advanced baby monitoring solution</p>
-      </div>
-      <div class="footer-section">
-        <h4>Quick Links</h4>
         <ul>
-          <li><a href="#home">Home</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#features">Features</a></li>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Features</a></li>
+            <li><a href="#">Contact</a></li>
         </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Contact</h4>
-        <p>Email: info@babyfoonplus.com</p>
-        <p>Phone: +31 (0)20 123 4567</p>
-      </div>
-    </div>
-  </footer>
+    </nav>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Upload Your Audio File for Analysis</h1>
+            <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" name="audio" accept=".wav,.mp3" required>
+                <button type="submit" class="cta-button">Upload File</button>
+            </form>
+        </div>
+        <div class="wave-animation"></div>
+    </section>
+
+    <section>
+        <h2>Audio Analysis Dashboard</h2>
+        <div class="dashboard-container">
+            <div class="sound-analysis-panel" id="sound-analysis">
+                <h3>Sound Analysis</h3>
+                <p>Sound Type: <span id="sound-type"></span></p>
+                <p>Timestamp: <span id="sound-time"></span></p>
+            </div>
+            <div class="nightly-overview-panel" id="nightly-overview">
+                <h3>Nightly Overview</h3>
+                <p>Overview of nightly sleep patterns</p>
+                <img id="nightly_plot" src="" alt="Nightly Plot" style="display:none;">
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="#">Email</a></li>
+                    <li><a href="#">Phone</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Social</h4>
+                <ul>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Twitter</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</main>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update the sound analysis panel
+        document.getElementById('sound-type').innerText = data.sound_type;
+        document.getElementById('sound-time').innerText = data.timestamp;
+    });
+
+    // Fetch the nightly plot
+    fetch('/generate_plot')
+    .then(response => response.json())
+    .then(data => {
+        const plotImg = document.getElementById('nightly_plot');
+        plotImg.src = '/uploads/' + data.plot;
+        plotImg.style.display = 'block';
+    });
+});
+</script>
+
 </body>
 </html>
