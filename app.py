@@ -1,60 +1,49 @@
-from flask import Flask, request, jsonify, render_template
-import librosa
-import numpy as np
+from flask import Flask, render_template, request, jsonify
 import os
+import librosa  # For audio file processing
 import matplotlib.pyplot as plt
-from datetime import datetime
+import numpy as np
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Helper functions
-def analyze_audio(file_path):
-    """
-    Analyze the audio file to extract key features like duration,
-    average amplitude, and classification (e.g., baby crying).
-    """
-    y, sr = librosa.load(file_path, sr=None)
-    duration = librosa.get_duration(y=y, sr=sr)
-    amplitude = np.mean(np.abs(y))
+# Set up file upload folder
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['ALLOWED_EXTENSIONS'] = {'mp3', 'wav', 'flac'}
 
-    # Simulate classification (e.g., baby crying vs. other sounds)
-    if amplitude > 0.05:
-        classification = 'Crying'
-    else:
-        classification = 'Ambient Noise'
+# Ensure the upload folder exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
-    return {
-        'duration': duration,
-        'amplitude': amplitude,
-        'classification': classification,
-    }
 
-def create_nightly_overview(data):
-    """
-    Generate a plot showing when the baby made sounds during the night.
-    """
-    timestamps = [d['timestamp'] for d in data]
-    classifications = [1 if d['classification'] == 'Crying' else 0 for d in data]
+# Function to check allowed file extensions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-    plt.figure(figsize=(10, 5))
-    plt.plot(timestamps, classifications, marker='o', linestyle='-', label='Crying')
-    plt.title('Nightly Sleep Pattern')
-    plt.xlabel('Time')
-    plt.ylabel('Sound Classification')
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.tight_layout()
-    plot_path = os.path.join(UPLOAD_FOLDER, 'nightly_overview.png')
+
+# Function to generate a plot from the audio data
+def generate_nightly_plot(file_path):
+    # Load the audio file
+    y, sr = librosa.load(file_path)
+
+    # Generate a simple waveform plot
+    plt.figure(figsize=(10, 4))
+    plt.plot(np.linspace(0, len(y) / sr, num=len(y)), y)
+    plt.title("Nightly Sleep Pattern")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+
+    # Save the plot as an image
+    plot_path = os.path.join(app.config['UPLOAD_FOLDER'], 'nightly_plot.png')
     plt.savefig(plot_path)
     plt.close()
+
     return plot_path
+
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -62,36 +51,35 @@ def upload_file():
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
+
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(file_path)
+    if file and allowed_file(file.filename):
+        filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filename)
 
-        analysis_result = analyze_audio(file_path)
-        analysis_result['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # Process the audio file (just an example)
+        y, sr = librosa.load(filename)
+        duration = librosa.get_duration(y=y, sr=sr)
+        amplitude = np.max(np.abs(y))
+        classification = "Normal"  # Example classification (can be modified)
 
-        # Save analysis result to a database or a list (for simplicity, using a list here)
-        if not hasattr(app, 'analysis_results'):
-            app.analysis_results = []
-        app.analysis_results.append(analysis_result)
+        # Generate plot for nightly overview
+        plot_path = generate_nightly_plot(filename)
 
-        # Generate nightly overview plot
-        plot_path = create_nightly_overview(app.analysis_results)
-
+        # Return analysis as JSON
         return jsonify({
-            'analysis': analysis_result,
-            'nightly_overview_plot': plot_path,
+            'analysis': {
+                'duration': duration,
+                'amplitude': amplitude,
+                'classification': classification
+            },
+            'nightly_overview_plot': plot_path
         })
 
-@app.route('/dashboard')
-def dashboard():
-    """
-    Render the dashboard with analysis data.
-    """
-    results = getattr(app, 'analysis_results', [])
-    return render_template('dashboard.html', results=results)
+    return jsonify({'error': 'File not allowed'}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)
