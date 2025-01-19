@@ -5,3 +5,4 @@ numpy>=1.24.0,<2.0.0      # Compatible with Python 3.11
 scipy>=1.11.0,<2.0.0      # Updated for Python 3.11
 gunicorn==20.1.0          # Latest stable version
 librosa==0.10.0.post2     # For audio processing; compatible with Python 3.11
+seaborn==0.12.2 	  # Latest stable version as of January 2025
