@@ -1,111 +1,127 @@
-from flask import Flask, render_template, request, jsonify
 import os
 import librosa
 import numpy as np
-import matplotlib.pyplot as plt
+from flask import Flask, render_template, jsonify, request
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-
-# Set the upload folder
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'wav'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['STATIC_FOLDER'] = 'static'
+processed_files = {}
+sleep_schedule = {}
 
-# Dummy Data storage (Replace with actual database storage if necessary)
-uploaded_files = {}
-
+# Default bedtime and wake-up time
+DEFAULT_BEDTIME = "19:00"
+DEFAULT_WAKEUP = "08:00"
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['file']
-
-    if file and allowed_file(file.filename):
-        filename = f"Sound{len(os.listdir(UPLOAD_FOLDER)) + 1}_{file.filename}"
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-
-        # Process the file (dummy classification logic for now)
-        sound_type = classify_sound(file_path)
-
-        # Store the file and its classification
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        uploaded_files[filename] = {'sound_type': sound_type, 'timestamp': timestamp}
-
-        # Return the sound type and timestamp
-        return jsonify({'sound_type': sound_type, 'timestamp': timestamp})
-    else:
-        return jsonify({'error': 'Invalid file type'}), 400
-
-
 def classify_sound(file_path):
-    # Example using librosa for basic sound classification
+    """Classify sound as baby cry or other noise, and measure volume."""
     y, sr = librosa.load(file_path)
+    duration = librosa.get_duration(y=y, sr=sr)
+
+    # Compute mean volume
+    rms = librosa.feature.rms(y=y)
+    volume = np.mean(rms) * 100  # Scale volume for readability
+
+    # MFCC classification for sound type
     mfcc = librosa.feature.mfcc(y=y, sr=sr)
     mfcc_mean = np.mean(mfcc)
 
-    # Dummy logic for classification based on MFCC mean
-    if mfcc_mean > 0:
-        return "Baby Cry"
-    else:
-        return "Other Noise"
+    sound_type = "Baby Cry" if mfcc_mean > 0 else "Other Noise"
+    return sound_type, duration, round(volume, 1)
 
+def extract_timestamp_from_filename(filename):
+    """Extract the timestamp from the filename."""
+    try:
+        parts = filename.split('_')
+        timestamp_str = '_'.join(parts[1:]).replace('.wav', '')
+        return datetime.strptime(timestamp_str, "%Y-%m-%d_%H-%M-%S").strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return "Unknown"
 
-@app.route('/generate_day_overview', methods=['GET'])
-def generate_day_overview():
-    # Example: Generate Day overview (filtering by today's date)
+def process_existing_files():
+    """Process all files in the /uploads directory."""
+    for filename in os.listdir(UPLOAD_FOLDER):
+        if allowed_file(filename) and filename not in processed_files:
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            timestamp = extract_timestamp_from_filename(filename)
+            sound_type, duration, volume = classify_sound(file_path)
+
+            processed_files[filename] = {
+                'timestamp': timestamp,
+                'sound_type': sound_type,
+                'duration': round(duration, 0),
+                'volume': volume
+            }
+
+def calculate_sleep_duration(bedtime, wake_time, events):
+    """Calculate the total sleep duration excluding noise events."""
+    total_sleep = (datetime.combine(datetime.today(), wake_time) -
+                   datetime.combine(datetime.today(), bedtime)).seconds / 3600
+
+    noise_duration = sum(event["duration"] for event in events if event["sound_type"] == "Baby Cry")
+    settling_time = len([event for event in events if event["sound_type"] == "Baby Cry"]) * 10 * 60
+    total_interruption = (noise_duration + settling_time) / 3600
+
+    return max(total_sleep - total_interruption, 0)
+
+@app.route('/')
+def index():
     today = datetime.today().strftime("%Y-%m-%d")
+    last_night_date = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    return render_template('index.html', default_bedtime=DEFAULT_BEDTIME, default_wakeup=DEFAULT_WAKEUP,
+                           last_night_date=last_night_date, today_date=today)
 
-    day_data = [
-        {"filename": filename, "sound_type": info["sound_type"], "timestamp": info["timestamp"]}
-        for filename, info in uploaded_files.items()
-        if info["timestamp"].startswith(today)
+@app.route('/set_schedule', methods=['POST'])
+def set_schedule():
+    data = request.json
+    date = data['date']
+    bedtime = data['bedtime']
+    wake_time = data['wake_time']
+    sleep_schedule[date] = {'bedtime': bedtime, 'wake_time': wake_time}
+    return jsonify({'status': 'success', 'message': 'Schedule updated'})
+
+@app.route('/night_overview/<date>', methods=['GET'])
+def night_overview(date):
+    bedtime = sleep_schedule.get(date, {}).get('bedtime', DEFAULT_BEDTIME)
+    wake_time = sleep_schedule.get(date, {}).get('wake_time', DEFAULT_WAKEUP)
+
+    bedtime = datetime.strptime(bedtime, "%H:%M").time()
+    wake_time = datetime.strptime(wake_time, "%H:%M").time()
+
+    events = [
+        {
+            "timestamp": info["timestamp"],
+            "sound_type": info["sound_type"],
+            "duration": info["duration"],
+            "volume": info["volume"]
+        }
+        for filename, info in processed_files.items()
+        if date in info["timestamp"]
     ]
 
-    return jsonify({"day_overview": day_data})
+    total_sleep = calculate_sleep_duration(bedtime, wake_time, events)
+    return jsonify({
+        "date": date,
+        "bedtime": bedtime.strftime("%H:%M"),
+        "wake_time": wake_time.strftime("%H:%M"),
+        "total_sleep": round(total_sleep, 2),
+        "events": events
+    })
 
-
-@app.route('/generate_week_overview', methods=['GET'])
-def generate_week_overview():
-    # Example: Generate Week overview (filtering by the last 7 days)
-    week_start = (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
-
-    week_data = [
-        {"filename": filename, "sound_type": info["sound_type"], "timestamp": info["timestamp"]}
-        for filename, info in uploaded_files.items()
-        if info["timestamp"] >= week_start
-    ]
-
-    return jsonify({"week_overview": week_data})
-
-
-@app.route('/generate_plot', methods=['GET'])
-def generate_plot():
-    # Example: Generate a simple plot for the baby's sleep patterns (dummy data)
-    plot_filename = "plot.png"
-    plot_path = os.path.join(app.config['STATIC_FOLDER'], plot_filename)
-
-    # Plot generation code (e.g., using matplotlib)
-    plt.plot([1, 2, 3, 4, 5], [10, 20, 25, 30, 40])  # Dummy data for visualization
-    plt.title("Nightly Overview")
-    plt.xlabel("Time")
-    plt.ylabel("Sleep Events")
-    plt.savefig(plot_path)
-
-    return jsonify({'plot': plot_filename})
-
+@app.route('/week_overview', methods=['GET'])
+def week_overview():
+    week_data = []
+    today = datetime.today()
+    for i in range(7):
+        date = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+        overview = night_overview(date).json
+        week_data.append(overview)
+    return jsonify(week_data)
 
 if __name__ == '__main__':
+    process_existing_files()
     app.run(debug=True)

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Monitor Analysis</title>
+    <style>
+        /* Root Variables */
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #2C3E50;
+            --accent-color: #27AE60;
+            --background-color: #F5F6FA;
+            --text-color: #2C3E50;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        header {
+            background-color: white;
+            box-shadow: var(--card-shadow);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        main {
+            padding-top: 80px;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            z-index: 1;
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .sound-analysis-panel,
+        .nightly-overview-panel {
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <div class="logo">
+            <span>Audio Analysis</span>
+        </div>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Features</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Baby Sleep Analysis</h1>
+            <p>Monitor your baby's sleep patterns with sound analysis</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>Audio Analysis Dashboard</h2>
+        <div class="dashboard-container">
+            <div class="sound-analysis-panel" id="sound-analysis">
+                <h3>Sound Analysis</h3>
+                <p>Sound Type: <span id="sound-type">N/A</span></p>
+                <p>Timestamp: <span id="sound-time">N/A</span></p>
+            </div>
+            <div class="nightly-overview-panel" id="nightly-overview">
+                <h3>Nightly Overview</h3>
+                <p>Overview of nightly sleep patterns</p>
+                <img id="nightly_plot" src="" alt="Nightly Plot" style="display:none;">
+            </div>
+        </div>
+
+        <!-- New Section for Day and Week Overview -->
+        <div class="overview-container">
+            <h3>Day Overview</h3>
+            <button id="day-overview-btn">Generate Day Overview</button>
+            <div id="day-overview"></div>
+
+            <h3>Week Overview</h3>
+            <button id="week-overview-btn">Generate Week Overview</button>
+            <div id="week-overview"></div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="#">Email</a></li>
+                    <li><a href="#">Phone</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Social</h4>
+                <ul>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Twitter</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</main>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update the sound analysis panel
+        document.getElementById('sound-type').innerText = data.sound_type;
+        document.getElementById('sound-time').innerText = data.timestamp;
+    });
+
+    // Fetch the nightly plot
+    fetch('/generate_plot')
+    .then(response => response.json())
+    .then(data => {
+        const plotImg = document.getElementById('nightly_plot');
+        plotImg.src = '/static/' + data.plot;
+        plotImg.style.display = 'block';
+    });
+});
+
+// Fetch Day Overview
+document.getElementById('day-overview-btn').addEventListener('click', function() {
+    fetch('/generate_day_overview')
+    .then(response => response.json())
+    .then(data => {
+        const overviewDiv = document.getElementById('day-overview');
+        overviewDiv.innerHTML = '';
+        data.day_overview.forEach(item => {
+            overviewDiv.innerHTML += `<p>File: ${item.filename}, Type: ${item.sound_type}, Time: ${item.timestamp}</p>`;
+        });
+    });
+});
+
+// Fetch Week Overview
+document.getElementById('week-overview-btn').addEventListener('click', function() {
+    fetch('/generate_week_overview')
+    .then(response => response.json())
+    .then(data => {
+        const overviewDiv = document.getElementById('week-overview');
+        overviewDiv.innerHTML = '';
+        data.week_overview.forEach(item => {
+            overviewDiv.innerHTML += `<p>File: ${item.filename}, Type: ${item.sound_type}, Time: ${item.timestamp}</p>`;
+        });
+    });
+});
+</script>
+
+</body>
+</html>
