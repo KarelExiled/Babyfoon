@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Babyfoon Plus - Advanced Baby Monitoring Solution</title>
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --secondary-color: #2C3E50;
+      --accent-color: #27AE60;
+      --background-color: #F5F6FA;
+      --text-color: #2C3E50;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--background-color);
+    }
+
+    header {
+      background-color: white;
+      box-shadow: var(--card-shadow);
+      position: fixed;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text-color);
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--primary-color);
+    }
+
+    main {
+      padding-top: 80px;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      z-index: 1;
+      max-width: 800px;
+      padding: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      border-radius: 30px;
+      margin-top: 2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .feature-card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-item {
+      background-color: var(--background-color);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-item h4 {
+      color: var(--secondary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-item p {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .sound-analysis-panel,
+    .nightly-overview-panel,
+    .sound-classification-panel {
+      background-color: var(--background-color);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .sleep-stats-panel {
+      grid-column: span 2;
+    }
+
+    .week-overview-panel {
+      grid-column: span 2;
+      background-color: var(--background-color);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+    }
+
+    .week-overview-container {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      height: 400px;
+    }
+
+    .contact form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    input, textarea {
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    textarea {
+      height: 150px;
+    }
+
+    button[type="submit"] {
+      padding: 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--secondary-color);
+    }
+
+    footer {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 3rem 2rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-section h4 {
+      margin-bottom: 1rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .night-timeline {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      margin-top: 2rem;
+    }
+
+    .night-timeline h3 {
+      margin-bottom: 1rem;
+    }
+
+    .timeline-container {
+      height: 400px;
+      position: relative;
+    }
+
+    .sleep-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      background-color: var(--background-color);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .sleep-metric {
+      text-align: center;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .sleep-metric h4 {
+      color: var(--secondary-color);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .sleep-metric p {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .event-legend {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    /* Wave animation */
+    .wave-animation {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='1' d='M0,96L48,112C96,128,192,160,288,170.7C384,181,480,171,576,144C672,117,768,75,864,64C960,53,1056,75,1152,96C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+      background-size: cover;
+      animation: wave 10s linear infinite;
+    }
+
+    @keyframes wave {
+      0% {
+        background-position-x: 0;
+      }
+      100% {
+        background-position-x: 1440px;
+      }
+    }
+
+    /* Feature icons */
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      background-color: var(--primary-color);
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
+    }
+
+    #dashboard-icon {
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'%3E%3C/path%3E%3C/svg%3E");
+    }
+
+  </style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo">
+      <svg width="40" height="40" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="#4A90E2"/>
+        <path d="M20 10C15 10 11 14 11 19C11 24 15 28 20 28C25 28 29 24 29 19" stroke="white" fill="none" stroke-width="2"/>
+        <circle cx="20" cy="19" r="4" fill="white"/>
+      </svg>
+      <span>Babyfoon Plus</span>
+    </div>
+    <ul>
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#technical">Technical</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Welcome to Babyfoon Plus</h1>
+      <p>Your advanced baby monitoring solution. Track your baby's sleep, sound events, and more with ease.</p>
+      <a href="#dashboard" class="cta-button">View Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Baby Monitor Dashboard Content -->
+  <section id="dashboard">
+    <h2>Baby Monitor Dashboard</h2>
+
+    <section>
+      <h3>Set Sleep Schedule</h3>
+      <label for="date">Date:</label>
+      <input type="date" id="date">
+      <label for="bedtime">Bedtime:</label>
+      <input type="time" id="bedtime">
+      <label for="wake-time">Wake-Up Time:</label>
+      <input type="time" id="wake-time">
+      <button onclick="setSchedule()">Save Schedule</button>
+    </section>
+
+    <section>
+      <h3>Last Night Overview</h3>
+      <div id="last-night-overview"></div>
+    </section>
+
+    <section>
+      <h3>Last Week Overview</h3>
+      <div id="last-week-overview"></div>
+    </section>
+  </section>
+
+  <section>
+    <h3>Features</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon" id="dashboard-icon"></div>
+        <h4>Advanced Dashboard</h4>
+        <p>View your baby's sleep patterns, sound events, and sleep metrics.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" id="sound-analysis-icon"></div>
+        <h4>Sound Analysis</h4>
+        <p>Classify and track different sounds your baby makes during sleep.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" id="nightly-overview-icon"></div>
+        <h4>Nightly Overview</h4>
+        <p>Get a detailed report of your baby's sleep and sound events for each night.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nightly Timeline and Stats -->
+  <section class="night-timeline">
+    <h3>Nightly Timeline</h3>
+    <div class="timeline-container">
+      <!-- Placeholder for sound event timeline -->
+    </div>
+  </section>
+
+  <!-- Sleep Stats Overview -->
+  <section class="sleep-summary">
+    <h3>Sleep Summary</h3>
+    <div class="stats-grid">
+      <div class="sleep-metric">
+        <h4>Total Sleep</h4>
+        <p>10 hrs</p>
+      </div>
+      <div class="sleep-metric">
+        <h4>Average Sleep</h4>
+        <p>8 hrs</p>
+      </div>
+      <div class="sleep-metric">
+        <h4>Max Sleep</h4>
+        <p>12 hrs</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="week-overview-panel">
+    <h3>Last Week Overview</h3>
+    <div class="week-overview-container">
+      <!-- Placeholder for the weekly overview -->
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:contact@babyfoonplus.com">contact@babyfoonplus.com</a></li>
+        <li><a href="#contact">Contact Form</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+  async function setSchedule() {
+    const date = document.getElementById('date').value;
+    const bedtime = document.getElementById('bedtime').value;
+    const wakeTime = document.getElementById('wake-time').value;
+
+    const response = await fetch('/set_schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, bedtime, wake_time: wakeTime })
+    });
+
+    const result = await response.json();
+    alert(result.message);
+  }
+
+  async function loadLastNight() {
+    const response = await fetch('/night_overview');
+    const data = await response.json();
+
+    const container = document.getElementById('last-night-overview');
+    container.innerHTML = `
+      <p><strong>Bedtime:</strong> ${data.bedtime}</p>
+      <p><strong>Wake-Up Time:</strong> ${data.wake_time}</p>
+      <p><strong>Total Sleep:</strong> ${data.total_sleep} hours</p>
+    `;
+  }
+
+  async function loadLastWeek() {
+    const response = await fetch('/week_overview');
+    const data = await response.json();
+
+    const container = document.getElementById('last-week-overview');
+    container.innerHTML = `
+      <h3>Week Overview</h3>
+      ${data.map(day => `
+        <div>
+          <h4>${day.date}</h4>
+          <p>Total Sleep: ${day.total_sleep} hours</p>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  loadLastNight();
+  loadLastWeek();
+</script>
+
+</body>
+</html>
