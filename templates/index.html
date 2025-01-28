@@ -25,20 +25,28 @@
             width: 100%;
             outline: none;
         }
+        .no-audio {
+            font-size: 18px;
+            color: #777;
+        }
     </style>
 </head>
 <body>
     <h1>Uploaded Audio Files</h1>
     <div class="audio-list">
-        {% for file in audio_files %}
-        <div class="audio-item">
-            <p>{{ file }}</p>
-            <audio controls>
-                <source src="{{ url_for('get_audio', filename=file) }}" type="audio/wav">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        {% endfor %}
+        {% if audio_files %}
+            {% for file in audio_files %}
+                <div class="audio-item">
+                    <p>{{ file }}</p>
+                    <audio controls>
+                        <source src="{{ url_for('get_audio', filename=file) }}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-audio">No audio files uploaded yet. Please try again later!</p>
+        {% endif %}
     </div>
 </body>
 </html>
