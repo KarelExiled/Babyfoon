@@ -1,194 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sound Analysis Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        header {
-            background-color: #0078d7;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        main {
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        label {
-            display: block;
-            margin: 10px 0 5px;
-        }
-        input, button {
-            padding: 10px;
-            width: 100%;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #0078d7;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #005fa3;
-        }
-        .plot img {
-            width: 100%;
-            margin-top: 20px;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP Audio Receiver</title>
 </head>
 <body>
-<header>
-    <h1>Sound Analysis Dashboard</h1>
-</header>
-<main>
-    <div class="container">
-        <!-- Sleep Schedule Form -->
-        <div class="section">
-            <h2>Set Sleep Schedule</h2>
-            <form id="schedule-form">
-                <label for="date">Date:</label>
-                <input type="date" id="date" required>
-                
-                <label for="bedtime">Bedtime:</label>
-                <input type="time" id="bedtime" required>
-                
-                <label for="wake-time">Wake Time:</label>
-                <input type="time" id="wake-time" required>
-                
-                <button type="submit">Save Schedule</button>
-            </form>
-        </div>
+  <h1>ESP Audio Stream</h1>
+  <p id="status">Connecting to WebSocket...</p>
+  <audio id="audio" controls autoplay></audio>
+  <script>
+    const serverHost = "<YOUR_WEBSOCKET_SERVER_HOST>"; // Replace with your WebSocket server host
+    const serverPort = 8888; // WebSocket server port
+    const socket = new WebSocket(`ws://${serverHost}:${serverPort}`);
+    const status = document.getElementById("status");
+    const audio = document.getElementById("audio");
 
-        <!-- Last Night Overview -->
-        <div class="section">
-            <h2>Night Overview</h2>
-            <label for="overview-date">Select Date:</label>
-            <input type="date" id="overview-date">
-            <button onclick="fetchNightOverview()">View Selected Night Overview</button>
-            <div id="night-overview"></div>
-        </div>
-
-        <!-- Night Timeline -->
-        <div class="section">
-            <h2>Night Timeline</h2>
-            <label for="timeline-date">Select Date:</label>
-            <input type="date" id="timeline-date">
-            <button onclick="fetchNightPlot()">View Selected Night's Timeline</button>
-            <div class="plot" id="night-plot"></div>
-        </div>
-
-        <!-- Sound Event Classification -->
-        <div class="section">
-            <h2>Sound Events</h2>
-            <label for="sound-events-date">Select Date for Sound Events:</label>
-            <input type="date" id="sound-events-date">
-            <button onclick="fetchSoundEvents()">View Sound Events</button>
-            <div id="sound-events-summary"></div>
-        </div>
-    </div>
-</main>
-
-<script>
-    const fetchNightOverview = async () => {
-        const date = document.getElementById("overview-date").value;
-        if (!date) {
-            alert("Please select a date.");
-            return;
-        }
-
-        const response = await fetch(`/night_overview/${date}`);
-        const data = await response.json();
-
-        const container = document.getElementById("night-overview");
-        container.innerHTML = `
-            <p><strong>Date:</strong> ${data.date}</p>
-            <p><strong>Bedtime:</strong> ${data.bedtime}</p>
-            <p><strong>Wake Time:</strong> ${data.wake_time}</p>
-            <p><strong>Total Sleep Duration:</strong> ${data.sleep_duration}</p>
-        `;
+    // WebSocket event handlers
+    socket.onopen = () => {
+      status.textContent = "Connected to WebSocket!";
     };
 
-    const fetchNightPlot = async () => {
-        const date = document.getElementById("timeline-date").value;
-        if (!date) {
-            alert("Please select a date.");
-            return;
-        }
-
-        const response = await fetch(`/plot/last_night/${date}`);
-        const data = await response.json();
-
-        document.getElementById("night-plot").innerHTML = `
-            <img src="${data.url}" alt="Sleep Timeline for ${date}">
-        `;
+    socket.onclose = () => {
+      status.textContent = "WebSocket connection closed.";
     };
 
-    const fetchSoundEvents = async () => {
-        const date = document.getElementById("sound-events-date").value;
-        if (!date) {
-            alert("Please select a date.");
-            return;
-        }
-
-        const response = await fetch(`/sound_events/${date}`);
-        const data = await response.json();
-
-        const container = document.getElementById("sound-events-summary");
-        container.innerHTML = `
-            <p><strong>Date:</strong> ${data.date}</p>
-            <p><strong>Number of Sound Events:</strong> ${data.num_events}</p>
-            <p><strong>Number of Crying Events:</strong> ${data.num_crying_events}</p>
-            <h3>Sound Events:</h3>
-            <ul>
-                ${data.sound_events.map(event => `<li>${event.time}: ${event.type}</li>`).join('')}
-            </ul>
-        `;
+    socket.onerror = (error) => {
+      status.textContent = `WebSocket error: ${error.message}`;
     };
 
-    // Handle schedule form submission
-    document.getElementById("schedule-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
+    const audioContext = new AudioContext();
+    const audioBufferQueue = [];
+    let sourceNode = null;
 
-        const date = document.getElementById("date").value;
-        const bedtime = document.getElementById("bedtime").value;
-        const wakeTime = document.getElementById("wake-time").value;
+    socket.onmessage = (event) => {
+      const binaryData = event.data;
 
-        const response = await fetch('/set_schedule', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ date, bedtime, wake_time: wakeTime } ),
+      if (binaryData instanceof Blob) {
+        binaryData.arrayBuffer().then((arrayBuffer) => {
+          audioContext.decodeAudioData(arrayBuffer, (decodedData) => {
+            audioBufferQueue.push(decodedData);
+            playAudioBuffer();
+          });
         });
+      }
+    };
 
-        if (response.ok) {
-            alert('Schedule updated!');
-        } else {
-            alert('Error updating schedule.');
-        }
-    });
-</script>
+    function playAudioBuffer() {
+      if (!sourceNode && audioBufferQueue.length > 0) {
+        const buffer = audioBufferQueue.shift();
+        sourceNode = audioContext.createBufferSource();
+        sourceNode.buffer = buffer;
+        sourceNode.connect(audioContext.destination);
+        sourceNode.start();
+        sourceNode.onended = () => {
+          sourceNode = null;
+          playAudioBuffer();
+        };
+      }
+    }
+  </script>
 </body>
 </html>
