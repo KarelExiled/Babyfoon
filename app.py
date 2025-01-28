@@ -3,29 +3,33 @@ import os
 
 app = Flask(__name__)
 
-# Folder to save uploaded audio
+# Folder to save uploaded audio files
 UPLOAD_FOLDER = './static/audio'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Set the folder where audio files are stored
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 @app.route('/')
 def index():
     # List all audio files in the folder
-    audio_files = os.listdir(UPLOAD_FOLDER)
+    audio_files = os.listdir(app.config['UPLOAD_FOLDER'])
     return render_template('index.html', audio_files=audio_files)
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     try:
-        # Save the binary audio data
+        # Save the binary audio data received in the POST request
         audio_data = request.data
         if not audio_data:
             return jsonify({'error': 'No audio data received'}), 400
 
-        # Save audio file with a unique name
-        filename = f"audio_{len(os.listdir(UPLOAD_FOLDER))}.wav"
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        # Save the audio file with a unique filename
+        filename = f"audio_{len(os.listdir(app.config['UPLOAD_FOLDER']))}.wav"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
+        # Write the received audio data to a file
         with open(filepath, 'wb') as f:
             f.write(audio_data)
 
@@ -35,7 +39,8 @@ def upload_audio():
 
 @app.route('/static/audio/<filename>')
 def get_audio(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    # Serve the audio file from the server's static folder
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
