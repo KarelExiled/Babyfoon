@@ -113,7 +113,18 @@ def index():
 
             # Get the latest received event (if any)
             received_event = received_events[-1] if received_events else None
-            latest_p_value = received_event['p_value'] if received_event else None
+            latest_amplitude = received_event['amplitude'] if received_event else None
+
+            # Hypothesis Test
+            if latest_amplitude is not None:
+                # Null Hypothesis (H0): Amplitude = 0 (Baby is asleep)
+                # Alternative Hypothesis (H1): Amplitude > 0 (Baby is awake)
+                if latest_amplitude > 0:
+                    hypothesis_conclusion = "The baby is awake. Amplitude is greater than zero, so we reject the null hypothesis."
+                else:
+                    hypothesis_conclusion = "The baby is asleep. The amplitude is zero, so we fail to reject the null hypothesis."
+            else:
+                hypothesis_conclusion = "No amplitude data available."
 
             return render_template(
                 'index.html',
@@ -127,7 +138,8 @@ def index():
                 median_sleep_duration=median_sleep_duration,
                 std_sleep_duration=std_sleep_duration,
                 correlation_sleep_wake_up=correlation_sleep_wake_up,
-                p_value=latest_p_value,  # pass the latest p-value from received events
+                hypothesis_conclusion=hypothesis_conclusion,  # pass the hypothesis conclusion
+                latest_amplitude=latest_amplitude,  # pass the latest amplitude
                 received_event=received_event,  # pass the latest event
                 received_events=received_events
             )
