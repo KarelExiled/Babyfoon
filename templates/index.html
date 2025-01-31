@@ -59,27 +59,34 @@
     {% if chosen_night %}
         <div class="content">
             <h2>Sleep Data for {{ chosen_night['date'].strftime('%b %d, %Y') }}</h2>
-            <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Data Plot">
-        </div>
-
-        <div class="stats">
-            <h2>Descriptive Statistics</h2>
-            <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
-            <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
-            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
-            <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
-            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
-            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
+            <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Plot">
             
-            <!-- Hypothesis Test Results -->
-            <h3>Hypothesis Test Results</h3>
-            <p><strong>Null Hypothesis (H0):</strong> There is no significant correlation between the number of wake-ups and total sleep duration.</p>
-            <p><strong>Alternative Hypothesis (H1):</strong> There is a significant correlation between the number of wake-ups and total sleep duration.</p>
-            <p><strong>Test Statistic (Pearson Correlation):</strong> {{ correlation_sleep_wake_up | round(2) }}</p>
-            <p><strong>P-Value:</strong> <span>{{ p_value | round(4) }}</span></p>
-            <p><strong>Conclusion:</strong> {% if p_value < 0.05 %}The result is statistically significant, and we reject the null hypothesis.{% else %}The result is not statistically significant, and we fail to reject the null hypothesis.{% endif %}</p>
+            <div class="stats">
+                <h3>Sleep Stats:</h3>
+                <p>Total Sleep Duration: {{ total_sleep_hours }} hours {{ total_sleep_minutes }} minutes</p>
+                <p>Adjusted Sleep Duration: {{ adjusted_sleep_hours }} hours {{ adjusted_sleep_minutes }} minutes</p>
+                <p>Mean Sleep Duration (Last 7 Nights): {{ mean_sleep_duration }} hours</p>
+                <p>Median Sleep Duration (Last 7 Nights): {{ median_sleep_duration }} hours</p>
+                <p>Standard Deviation of Sleep Duration (Last 7 Nights): {{ std_sleep_duration }} hours</p>
+                <p>P-value (Correlation between Wake-ups and Total Sleep): {{ p_value }}</p>
+                <p>Pearson Correlation: {{ correlation_sleep_wake_up }}</p>
+            </div>
         </div>
     {% endif %}
+    
+    <!-- Display received events -->
+    <div class="content">
+        <h3>Received Events:</h3>
+        {% if received_events %}
+            <ul>
+                {% for event in received_events %}
+                    <li>{{ event['timestamp'] }} - {{ event['event_type'] }} - Amplitude: {{ event['amplitude'] }} - P-value: {{ event['p_value'] }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No events received yet.</p>
+        {% endif %}
+    </div>
 
 </body>
 </html>
