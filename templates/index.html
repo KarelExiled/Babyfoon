@@ -85,78 +85,57 @@
     <h1>Sleep Data for the Night</h1>
     
     <!-- Date Picker Form -->
-    <form id="sleep-data-form">
+    <form action="/" method="POST">
         <label for="chosen_day">Select a Day:</label>
         <input type="date" id="chosen_day" name="chosen_day" required>
         <button type="submit">Show Data</button>
     </form>
     
-    <div id="content-container">
-        <!-- This will be dynamically updated -->
-    </div>
+    {% if chosen_night %}
+        <div class="content">
+            <h2>Sleep Data for {{ chosen_night['date'].strftime('%b %d, %Y') }}</h2>
+            <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Data Plot">
+        </div>
 
-    <script>
-        // AJAX function to submit the form data
-        document.getElementById("sleep-data-form").addEventListener("submit", function(event) {
-            event.preventDefault();  // Prevent the form from submitting traditionally
+        <div class="stats">
+            <h2>Descriptive Statistics</h2>
+            <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
+            <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
+            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
+            <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
+            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
+            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
+        </div>
 
-            // Create a new FormData object
-            const formData = new FormData(this);
-            
-            // Send the data using a POST request via AJAX
-            fetch("/", {
-                method: "POST",
-                body: formData,
-            })
-            .then(response => response.json())  // Expect a JSON response
-            .then(data => {
-                // Update the page dynamically with the response data
-                const contentContainer = document.getElementById("content-container");
-                
-                if (data.chosen_night) {
-                    contentContainer.innerHTML = `
-                        <div class="content">
-                            <h2>Sleep Data for ${data.chosen_night.date}</h2>
-                            <img id="sleep-plot" src="${data.image_url}" alt="Sleep Data Plot">
-                        </div>
+        <!-- Hypothesis Test Results -->
+        <div class="hypothesis-test">
+            <h3>Hypothesis Test Results</h3>
+            <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
+            <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
+            <p><strong>Test Statistic (Pearson Correlation):</strong> {{ correlation_sleep_wake_up | round(2) }}</p>
+            <p><strong>P-Value:</strong> <span>{{ p_value if p_value is not none else 'N/A' }}</span></p>
+            <p><strong>Conclusion:</strong> 
+                {% if received_events and received_events[-1].p_value < 0.05 %}
+                    The baby is awake. The result is statistically significant, and we reject the null hypothesis.
+                {% else %}
+                    The baby is asleep. The result is not statistically significant, and we fail to reject the null hypothesis.
+                {% endif %}
+            </p>
+        </div>
 
-                        <div class="stats">
-                            <h2>Descriptive Statistics</h2>
-                            <p>Total Sleep Duration: <strong>${data.total_sleep_hours} hours and ${data.total_sleep_minutes} minutes</strong></p>
-                            <p>Adjusted Sleep Duration (without sound events): <strong>${data.adjusted_sleep_hours} hours and ${data.adjusted_sleep_minutes} minutes</strong></p>
-                            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>${data.mean_sleep_duration}</strong> hours</p>
-                            <p>Median Total Sleep Duration (Last 7 Nights): <strong>${data.median_sleep_duration}</strong> hours</p>
-                            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>${data.std_sleep_duration}</strong> hours</p>
-                            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>${data.correlation_sleep_wake_up}</strong></p>
-                        </div>
-
-                        <div class="hypothesis-test">
-                            <h3>Hypothesis Test Results</h3>
-                            <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
-                            <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
-                            <p><strong>Test Statistic (Pearson Correlation):</strong> ${data.correlation_sleep_wake_up}</p>
-                            <p><strong>P-Value:</strong> ${data.p_value || 'N/A'}</p>
-                            <p><strong>Conclusion:</strong> ${data.conclusion}</p>
-                        </div>
-
-                        <div class="received-event">
-                            <h3>Latest Received Event</h3>
-                            <p><strong>Event Type:</strong> ${data.latest_event.event_type}</p>
-                            <p><strong>Amplitude:</strong> ${data.latest_event.amplitude}</p>
-                            <p><strong>P-Value:</strong> ${data.latest_event.p_value}</p>
-                            <p><strong>Timestamp:</strong> ${data.latest_event.timestamp}</p>
-                        </div>
-                    `;
-                } else {
-                    contentContainer.innerHTML = `<p>No data available for the selected date.</p>`;
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error);
-                document.getElementById("content-container").innerHTML = "<p>Error retrieving data. Please try again.</p>";
-            });
-        });
-    </script>
+        <!-- Latest Received Event -->
+        <div class="received-event">
+            <h3>Latest Received Event</h3>
+            {% if received_events %}
+                <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
+                <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
+                <p><strong>P-Value:</strong> {{ received_events[-1].p_value }}</p>
+                <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
+            {% else %}
+                <p>No events received yet.</p>
+            {% endif %}
+        </div>
+    {% endif %}
 
 </body>
 </html>
