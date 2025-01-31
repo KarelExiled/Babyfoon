@@ -110,11 +110,11 @@
         <!-- Hypothesis Test Results -->
         <div class="hypothesis-test">
             <h3>Hypothesis Test Results</h3>
-            <p><strong>Null Hypothesis (H0):</strong> The Baby is a sleep. Amplitude = 0.</p>
-            <p><strong>Alternative Hypothesis (H1):</strong> The Baby is a wake. Amplitude = > 0.</p>
+            <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
+            <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
             <p><strong>Test Statistic (Pearson Correlation):</strong> {{ correlation_sleep_wake_up | round(2) }}</p>
-            <p><strong>P-Value:</strong> <span>{{ p_value | round(4) }}</span></p>
-            <p><strong>Conclusion:</strong> {% if p_value < 0.05 %} The baby awake. The result is statistically significant, and we reject the null hypothesis.{% else %} The baby is asleep. The result is not statistically significant, and we fail to reject the null hypothesis.{% endif %}</p>
+            <p><strong>P-Value:</strong> <span>{{ received_events[-1].p_value | round(4) }}</span></p>
+            <p><strong>Conclusion:</strong> {% if received_events[-1].p_value < 0.05 %} The baby is awake. The result is statistically significant, and we reject the null hypothesis.{% else %} The baby is asleep. The result is not statistically significant, and we fail to reject the null hypothesis.{% endif %}</p>
         </div>
 
         <!-- Latest Received Event -->
