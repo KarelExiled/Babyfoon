@@ -80,7 +80,7 @@
         {% if received_events %}
             <ul>
                 {% for event in received_events %}
-                    <li>{{ event['timestamp'] }} - {{ event['event_type'] }} - Amplitude: {{ event['amplitude'] }} - P-value: {{ event['p_value'] }}</li>
+                    <li>{{ event['timestamp'] }} - {{ event['event_type'] }} - Max decibel: {{ event['amplitude'] }} - P-value: {{ event['p_value'] }}</li>
                 {% endfor %}
             </ul>
         {% else %}
