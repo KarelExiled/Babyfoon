@@ -79,7 +79,23 @@
             <p><strong>P-Value:</strong> <span>{{ p_value | round(4) }}</span></p>
             <p><strong>Conclusion:</strong> {% if p_value < 0.05 %}The result is statistically significant, and we reject the null hypothesis.{% else %}The result is not statistically significant, and we fail to reject the null hypothesis.{% endif %}</p>
         </div>
-    {% endif %}
 
+        <!-- Display received events -->
+        <div class="received-events">
+            <h2>Received Events</h2>
+            <ul>
+                {% for event in received_events %}
+                    <li>
+                        <strong>Event Type:</strong> {{ event['event_type'] }}<br>
+                        <strong>Amplitude:</strong> {{ event['amplitude'] }}<br>
+                        <strong>P-Value:</strong> {{ event['p_value'] }}<br>
+                        <strong>Timestamp:</strong> {{ event['timestamp'] }}<br>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>No events received yet.</p>
+    {% endif %}
 </body>
 </html>
