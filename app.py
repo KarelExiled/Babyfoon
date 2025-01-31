@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, jsonify
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
@@ -32,6 +32,102 @@ def process_received_event(event_type, amplitude, p_value):
     }
     received_events.append(event_data)
 
+# Route to handle receiving data (POST)
+@app.route('/receive_data', methods=['POST'])
+def receive_data():
+    try:
+        data = request.get_json()  # Expecting JSON data
+        event_type = data.get("event_type")
+        amplitude = data.get("amplitude")
+        p_value = data.get("p_value")
+
+        # Debugging: Print the received data
+        print(f"Received Data: event_type={event_type}, amplitude={amplitude}, p_value={p_value}")
+
+        if event_type and amplitude and p_value:
+            # Process the received event data
+            process_received_event(event_type, amplitude, p_value)
+            return jsonify({"status": "success", "message": "Data received!"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Missing required fields!"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# Route to handle the homepage and show data for a specific night
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        chosen_day = request.form['chosen_day']
+        chosen_day = datetime.strptime(chosen_day, "%Y-%m-%d")
+
+        # Find the index of the chosen day
+        chosen_night_index = next((index for index, day in enumerate(sleep_data) if day["date"] == chosen_day), None)
+
+        if chosen_night_index is not None:
+            image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night = generate_sleep_plot(
+                chosen_night_index)
+
+            # Descriptive statistics for the last 7 nights (excluding the current day)
+            total_sleep_durations = []
+            total_wake_ups = []
+
+            for i in range(max(0, chosen_night_index - 7), chosen_night_index):
+                night_data = sleep_data[i]
+                bedtime = night_data["bedtime"]
+                wake_time = night_data["wake_time"]
+                sound_events = night_data["sound_events"]
+
+                # Create time axis for the current night
+                time_axis = [bedtime + timedelta(minutes=i) for i in range(int((wake_time - bedtime).seconds / 60))]
+
+                # Initialize sleep state (1 = Sleeping, 0 = Awake)
+                sleep_state = np.ones(len(time_axis))
+
+                # Mark awake periods during sound events
+                for event in sound_events:
+                    event_time = event["time"]
+                    start_index = max(0, (event_time - bedtime).seconds // 60)
+                    end_index = min(len(sleep_state), start_index + int(event["duration"]))
+                    sleep_state[start_index:end_index] = 0
+
+                    # Gradually transition back to sleep
+                    transition_duration = 15  # 15 minutes for transition
+                    transition_end_index = min(len(sleep_state), end_index + transition_duration)
+                    transition_range = np.linspace(0, 1, transition_end_index - end_index)
+                    sleep_state[end_index:transition_end_index] = transition_range
+
+                # Calculate the total sleep time (time spent in sleep state = 1)
+                sleep_times = np.array(time_axis)[sleep_state == 1]
+                total_sleep_duration = len(sleep_times) * 60  # in seconds
+                total_sleep_durations.append(total_sleep_duration)
+                total_wake_ups.append(len(sound_events))  # Each sound event represents a wake-up
+
+            # Convert total sleep durations from seconds to hours for descriptive statistics
+            mean_sleep_duration = np.mean(total_sleep_durations) / 3600  # in hours
+            median_sleep_duration = np.median(total_sleep_durations) / 3600  # in hours
+            std_sleep_duration = np.std(total_sleep_durations) / 3600  # in hours
+
+            # Calculate Pearson correlation between wake-ups and total sleep duration
+            correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
+
+            return render_template('index.html',
+                                   chosen_night=chosen_night,
+                                   image_filename=image_filename,
+                                   total_sleep_hours=total_sleep_hours,
+                                   total_sleep_minutes=total_sleep_minutes,
+                                   adjusted_sleep_hours=adjusted_sleep_hours,
+                                   adjusted_sleep_minutes=adjusted_sleep_minutes,
+                                   mean_sleep_duration=mean_sleep_duration,
+                                   median_sleep_duration=median_sleep_duration,
+                                   std_sleep_duration=std_sleep_duration,
+                                   correlation_sleep_wake_up=correlation_sleep_wake_up,
+                                   p_value=p_value,
+                                   received_events=received_events)
+
+    return render_template('index.html', received_events=received_events)
+
+
 # Function to generate random sound events for a night
 def generate_sound_events(bedtime, wake_time):
     num_events = random.randint(0, 5)
@@ -45,7 +141,6 @@ def generate_sound_events(bedtime, wake_time):
         events.append({"time": event_time, "loudness": loudness, "duration": duration})
 
     return events
-
 
 # Simulate 4 weeks of data
 start_date = datetime(2025, 1, 1)
@@ -125,99 +220,5 @@ def generate_sleep_plot(chosen_night_index):
     return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
 
 
-# Route to handle the homepage and show data for a specific night
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        chosen_day = request.form['chosen_day']
-        chosen_day = datetime.strptime(chosen_day, "%Y-%m-%d")
-
-        # Find the index of the chosen day
-        chosen_night_index = next((index for index, day in enumerate(sleep_data) if day["date"] == chosen_day), None)
-
-        if chosen_night_index is not None:
-            image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night = generate_sleep_plot(
-                chosen_night_index)
-
-            # Descriptive statistics for the last 7 nights (excluding the current day)
-            total_sleep_durations = []
-            total_wake_ups = []
-
-            for i in range(max(0, chosen_night_index - 7), chosen_night_index):
-                night_data = sleep_data[i]
-                bedtime = night_data["bedtime"]
-                wake_time = night_data["wake_time"]
-                sound_events = night_data["sound_events"]
-
-                # Create time axis for the current night
-                time_axis = [bedtime + timedelta(minutes=i) for i in range(int((wake_time - bedtime).seconds / 60))]
-
-                # Initialize sleep state (1 = Sleeping, 0 = Awake)
-                sleep_state = np.ones(len(time_axis))
-
-                # Mark awake periods during sound events
-                for event in sound_events:
-                    event_time = event["time"]
-                    start_index = max(0, (event_time - bedtime).seconds // 60)
-                    end_index = min(len(sleep_state), start_index + int(event["duration"]))
-                    sleep_state[start_index:end_index] = 0
-
-                    # Gradually transition back to sleep
-                    transition_duration = 15  # 15 minutes for transition
-                    transition_end_index = min(len(sleep_state), end_index + transition_duration)
-                    transition_range = np.linspace(0, 1, transition_end_index - end_index)
-                    sleep_state[end_index:transition_end_index] = transition_range
-
-                # Calculate the total sleep time (time spent in sleep state = 1)
-                sleep_times = np.array(time_axis)[sleep_state == 1]
-                total_sleep_duration = len(sleep_times) * 60  # in seconds
-                total_sleep_durations.append(total_sleep_duration)
-                total_wake_ups.append(len(sound_events))  # Each sound event represents a wake-up
-
-            # Convert total sleep durations from seconds to hours for descriptive statistics
-            mean_sleep_duration = np.mean(total_sleep_durations) / 3600  # in hours
-            median_sleep_duration = np.median(total_sleep_durations) / 3600  # in hours
-            std_sleep_duration = np.std(total_sleep_durations) / 3600  # in hours
-
-            # Calculate Pearson correlation between wake-ups and total sleep duration
-            correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
-
-            return render_template('index.html',
-                                   chosen_night=chosen_night,
-                                   image_filename=image_filename,
-                                   total_sleep_hours=total_sleep_hours,
-                                   total_sleep_minutes=total_sleep_minutes,
-                                   adjusted_sleep_hours=adjusted_sleep_hours,
-                                   adjusted_sleep_minutes=adjusted_sleep_minutes,
-                                   mean_sleep_duration=mean_sleep_duration,
-                                   median_sleep_duration=median_sleep_duration,
-                                   std_sleep_duration=std_sleep_duration,
-                                   correlation_sleep_wake_up=correlation_sleep_wake_up,
-                                   p_value=p_value,
-                                   received_events=received_events)
-
-    return render_template('index.html', received_events=received_events)
-
-
-# Route to handle receiving data (POST)
-@app.route('/receive_data', methods=['POST'])
-def receive_data():
-    try:
-        data = request.get_json()  # Expecting JSON data
-        event_type = data.get("event_type")
-        amplitude = data.get("amplitude")
-        p_value = data.get("p_value")
-
-        if event_type and amplitude and p_value:
-            # Process the received event data
-            process_received_event(event_type, amplitude, p_value)
-            return jsonify({"status": "success", "message": "Data received!"}), 200
-        else:
-            return jsonify({"status": "error", "message": "Missing required fields!"}), 400
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
-# Run the app
 if __name__ == '__main__':
     app.run(debug=True)
