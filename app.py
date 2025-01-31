@@ -1,278 +1,190 @@
-from flask import Flask, request, jsonify, render_template
-from datetime import datetime, timedelta
-import os
-import glob
-import matplotlib.pyplot as plt
-from pydub import AudioSegment
+from flask import Flask, render_template, request, send_file
 import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+import random
 import matplotlib.dates as mdates
-from matplotlib.dates import HourLocator, DateFormatter
-
-# Path to ffmpeg (update with the correct path for your system)
-ffmpeg_path = r"C:\ffmpeg\bin\ffmpeg.exe"  # Example path
-
-if os.path.exists(ffmpeg_path):
-    AudioSegment.ffmpeg = ffmpeg_path
-else:
-    AudioSegment.ffmpeg = None
-    print("Warning: ffmpeg not found. Audio processing may not work.")
+from scipy.stats import pearsonr
+import os
+import io
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-UPLOAD_DIR = 'uploads'
-PLOT_FOLDER = 'static/plots'
-sleep_schedule = {}
+# Fixed bedtime and wake-up time
+bedtime_fixed = datetime(2025, 1, 21, 19, 0)  # 19:00 (7:00 PM)
+wake_time_fixed = datetime(2025, 1, 22, 9, 0)  # 09:00 (9:00 AM)
 
-if not os.path.exists(PLOT_FOLDER):
-    os.makedirs(PLOT_FOLDER)
+# Create a directory to save images temporarily
+UPLOAD_FOLDER = 'static/images'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def classify_sound(filename):
-    if 'cry' in filename.lower():
-        return 'Cry'
-    return 'Other Noise'
 
-def get_audio_properties(filename):
-    try:
-        audio = AudioSegment.from_wav(filename)
-        duration = len(audio) / 1000
-        samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
-
-        if samples.size == 0:
-            raise ValueError("The audio file has no valid samples.")
-
-        samples = samples[~np.isnan(samples)]
-        samples = samples[~np.isinf(samples)]
-        samples = samples[np.abs(samples) > 1e-10]
-
-        if samples.size == 0:
-            raise ValueError("No valid audio samples remain after cleaning.")
-
-        rms = np.sqrt(np.mean(samples ** 2))
-
-        if rms <= 0:
-            raise ValueError("RMS value is non-positive.")
-
-        loudness = 20 * np.log10(rms)
-        return round(loudness, 2), round(duration, 2)
-
-    except ValueError as ve:
-        print(f"Error processing file {filename}: {ve}")
-        return None, None
-    except Exception as e:
-        print(f"Unexpected error processing file {filename}: {e}")
-        return None, None
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/set_schedule', methods=['POST'])
-def set_schedule():
-    data = request.get_json()
-    date_str = data['date']
-    bedtime_str = data['bedtime']
-    wake_time_str = data['wake_time']
-
-    date = datetime.strptime(date_str, "%Y-%m-%d")
-    bedtime = datetime.strptime(bedtime_str, "%H:%M")
-    wake_time = datetime.strptime(wake_time_str, "%H:%M")
-
-    if wake_time < bedtime:
-        wake_time += timedelta(days=1)
-
-    bedtime = date.replace(hour=bedtime.hour, minute=bedtime.minute, second=0, microsecond=0)
-    wake_time = date.replace(hour=wake_time.hour, minute=wake_time.minute, second=0, microsecond=0)
-
-    sleep_duration = wake_time - bedtime
-
-    sleep_schedule[date_str] = {
-        'bedtime': bedtime.strftime("%H:%M"),
-        'wake_time': wake_time.strftime("%H:%M"),
-        'sleep_duration': str(sleep_duration)
-    }
-
-    return jsonify({
-        'date': date_str,
-        'bedtime': bedtime.strftime("%H:%M"),
-        'wake_time': wake_time.strftime("%H:%M"),
-        'sleep_duration': str(sleep_duration)
-    })
-
-@app.route('/sound_events/<date>', methods=['GET'])
-def sound_events(date):
-    bedtime_str = '22:00'
-    wake_time_str = '06:00'
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
-    previous_day = date_obj - timedelta(days=1)
-
-    bedtime = datetime.strptime(f"{previous_day.strftime('%Y-%m-%d')} {bedtime_str}", "%Y-%m-%d %H:%M")
-    wake_time = datetime.strptime(f"{date} {wake_time_str}", "%Y-%m-%d %H:%M")
-
-    sound_files = glob.glob(f"{UPLOAD_DIR}/Sound*_{previous_day.strftime('%Y-%m-%d')}*.wav") + \
-                  glob.glob(f"{UPLOAD_DIR}/Sound*_{date}*.wav")
-
-    event_list = []
-    num_events = 0
-    num_crying = 0
-
-    for sound_file in sound_files:
-        filename = os.path.basename(sound_file)
-        try:
-            parts = filename.split('_')
-            timestamp_str = f"{parts[1]}_{parts[2].replace('.wav', '')}"
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H-%M-%S")
-
-            if bedtime <= timestamp <= wake_time:
-                event_type = classify_sound(filename)
-                loudness, duration = get_audio_properties(sound_file)
-
-                if loudness is not None and duration is not None:
-                    if event_type == "Other Noise":
-                        event_type = "Crying"
-
-                    event_list.append({
-                        'time': timestamp.strftime('%H:%M:%S'),
-                        'type': event_type,
-                        'loudness': loudness,
-                        'duration': duration
-                    })
-                    num_events += 1
-                    if event_type == 'Crying':
-                        num_crying += 1
-        except ValueError:
-            print(f"Error parsing timestamp from filename: {filename}")
-            continue
-
-    return jsonify({
-        'date': date,
-        'num_events': num_events,
-        'num_crying_events': num_crying,
-        'sound_events': event_list
-    })
-
-@app.route('/night_overview/<date>', methods=['GET'])
-def night_overview(date):
-    print(f"Requested date: {date}")
-
-    if date not in sleep_schedule:
-        bedtime_str = '22:00'
-        wake_time_str = '06:00'
-    else:
-        bedtime_str = sleep_schedule[date]['bedtime']
-        wake_time_str = sleep_schedule[date]['wake_time']
-
-    bedtime = datetime.strptime(bedtime_str, "%H:%M")
-    wake_time = datetime.strptime(wake_time_str, "%H:%M")
-
-    if wake_time < bedtime:
-        wake_time += timedelta(days=1)
-
-    sleep_duration = wake_time - bedtime
-
-    return jsonify({
-        'date': date,
-        'bedtime': bedtime.strftime("%H:%M"),
-        'wake_time': wake_time.strftime("%H:%M"),
-        'sleep_duration': str(sleep_duration)
-    })
-
-def extract_sound_events(date, sound_files):
+# Function to generate random sound events for a night
+def generate_sound_events(bedtime, wake_time):
+    num_events = random.randint(0, 5)
     events = []
-    for sound_file in sound_files:
-        filename_parts = sound_file.split('_')
-        timestamp_str = filename_parts[-1].replace('.wav', '')
-        try:
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H-%M-%S")
-        except ValueError:
-            try:
-                timestamp = datetime.strptime(timestamp_str, "%m-%d-%y")
-            except ValueError:
-                timestamp = None
 
-        if timestamp:
-            event_type = classify_sound(sound_file)
-            events.append({'time': timestamp, 'type': event_type})
+    for _ in range(num_events):
+        event_time = bedtime + timedelta(minutes=random.randint(0, int((wake_time - bedtime).seconds / 60)))
+        loudness = round(random.uniform(70, 120), 2)
+        duration = random.uniform(5, 20)
+
+        events.append({"time": event_time, "loudness": loudness, "duration": duration})
+
     return events
 
-@app.route('/plot/last_night/<date>', methods=['GET'])
-def night_plot(date):
-    plot_image_filename = f"{date.replace('-', '')}_timeline.png"
-    plot_image_path = os.path.join(PLOT_FOLDER, plot_image_filename)
 
-    if not os.path.exists(plot_image_path):
-        generate_sleep_plot(date)
+# Simulate 4 weeks of data
+start_date = datetime(2025, 1, 1)
+sleep_data = []
 
-    return jsonify({"url": f"/static/plots/{plot_image_filename}"})
+for day in range(28):
+    date = start_date + timedelta(days=day)
+    bedtime = bedtime_fixed
+    wake_time = wake_time_fixed
+    sound_events = generate_sound_events(bedtime, wake_time)
+    sleep_data.append({"date": date, "bedtime": bedtime, "wake_time": wake_time, "sound_events": sound_events})
 
 
-def generate_sleep_plot(date):
-    if date not in sleep_schedule:
-        bedtime = datetime.strptime(f"{date} 22:00", "%Y-%m-%d %H:%M")
-        wake_time = datetime.strptime(f"{date} 06:00", "%Y-%m-%d %H:%M") + timedelta(days=1)
-    else:
-        bedtime_str = sleep_schedule[date]['bedtime']
-        wake_time_str = sleep_schedule[date]['wake_time']
-        bedtime = datetime.strptime(f"{date} {bedtime_str}", "%Y-%m-%d %H:%M")
-        wake_time = datetime.strptime(f"{date} {wake_time_str}", "%Y-%m-%d %H:%M")
-        if wake_time < bedtime:
-            wake_time += timedelta(days=1)
+# Function to process sleep data and generate plot
+def generate_sleep_plot(chosen_night_index):
+    chosen_night = sleep_data[chosen_night_index]
+    time_axis = [chosen_night["bedtime"] + timedelta(minutes=i) for i in
+                 range(int((chosen_night["wake_time"] - chosen_night["bedtime"]).seconds / 60))]
 
-    time_axis = [bedtime + timedelta(minutes=i) for i in range(int((wake_time - bedtime).total_seconds() / 60))]
+    # Initialize sleep state (1 = Sleeping, 0 = Awake)
     sleep_state = np.ones(len(time_axis))
 
-    sound_files = glob.glob(f"{UPLOAD_DIR}/Sound*_{date}*.wav")
-    extracted_events = []
-    for sound_file in sound_files:
-        filename = os.path.basename(sound_file)
-        try:
-            parts = filename.split('_')
-            timestamp_str = f"{parts[1]}_{parts[2].replace('.wav', '')}"
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H-%M-%S")
-            if bedtime <= timestamp <= wake_time:
-                loudness, duration = get_audio_properties(sound_file)
-                if loudness is not None and duration is not None:
-                    extracted_events.append({"time": timestamp.strftime("%H:%M:%S"), "loudness": loudness, "duration": duration})
-        except ValueError:
-            print(f"Error parsing timestamp from filename: {filename}")
-
-    for event in extracted_events:
-        event_time = datetime.strptime(event["time"], "%H:%M:%S").replace(year=bedtime.year, month=bedtime.month, day=bedtime.day)
-        if event_time < bedtime:
-            event_time += timedelta(days=1)
-        interruption_duration = 30
-        start_index = max(0, int((event_time - bedtime).total_seconds() / 60))
-        end_index = min(len(sleep_state), start_index + interruption_duration)
+    # Mark awake periods during sound events
+    for event in chosen_night["sound_events"]:
+        event_time = event["time"]
+        start_index = max(0, (event_time - chosen_night["bedtime"]).seconds // 60)
+        end_index = min(len(sleep_state), start_index + int(event["duration"]))
         sleep_state[start_index:end_index] = 0
 
-    total_sleep_minutes = np.sum(sleep_state)
-    total_sleep_hours = total_sleep_minutes / 60
+        # Gradually transition back to sleep
+        transition_duration = 15  # 15 minutes for transition
+        transition_end_index = min(len(sleep_state), end_index + transition_duration)
+        transition_range = np.linspace(0, 1, transition_end_index - end_index)
+        sleep_state[end_index:transition_end_index] = transition_range
 
+    # Calculate the total sleep time (time spent in sleep state = 1)
+    sleep_times = np.array(time_axis)[sleep_state == 1]
+    total_sleep_duration = len(sleep_times) * 60  # in seconds
+    total_sleep_hours = total_sleep_duration // 3600
+    total_sleep_minutes = (total_sleep_duration % 3600) // 60
+
+    # Adjusted sleep time considering sound events
+    adjusted_sleep_duration = 14 * 60 - len(
+        chosen_night["sound_events"]) * 30  # 14 hours minus sound events * 0.5 hours
+    adjusted_sleep_hours = adjusted_sleep_duration // 60
+    adjusted_sleep_minutes = adjusted_sleep_duration % 60
+
+    # Plot the sleep state for the chosen night
     plt.figure(figsize=(12, 6))
-    plt.plot(time_axis, sleep_state, label="Sleep State (1 = Sleeping, 0 = Awake)", color="blue")
-    for event in extracted_events:
-        event_time = datetime.strptime(event["time"], "%H:%M:%S").replace(year=bedtime.year, month=bedtime.month, day=bedtime.day)
-        if event_time < bedtime:
-            event_time += timedelta(days=1)
-        plt.scatter(event_time, 0, color="red", label=f"Sound ({event['loudness']} dB)", zorder=5)
+    plt.plot(time_axis, sleep_state, label=f"Night of {chosen_night['date'].strftime('%b %d, %Y')}", color="blue")
 
-    plt.title(f"Sleep and Sound Events ({bedtime.strftime('%H:%M')} - {wake_time.strftime('%H:%M')}) for {date}")
+    # Add sound events as red dots
+    for event in chosen_night["sound_events"]:
+        plt.scatter(event["time"], 0, color="red", label=f"Sound: {event['loudness']} dB", zorder=5)
+
+    # Formatting the plot
+    plt.title(f"Sleep Data for Night of {chosen_night['date'].strftime('%b %d, %Y')}")
     plt.xlabel("Time")
-    plt.ylabel("Sleep State")
+    plt.ylabel("Sleep State (1 = Sleeping, 0 = Awake)")
     plt.yticks([0, 1], ["Awake", "Sleeping"])
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.legend()
+
+    # Format x-axis to show time only
     time_formatter = mdates.DateFormatter("%H:%M")
     plt.gca().xaxis.set_major_formatter(time_formatter)
-    plt.gcf().autofmt_xdate()
-    plt.tight_layout()
 
-    plot_image_filename = f"{date.replace('-', '')}_timeline.png"
-    plot_image_path = os.path.join(PLOT_FOLDER, plot_image_filename)
-    plt.savefig(plot_image_path)
+    # Rotate time labels for readability
+    plt.gcf().autofmt_xdate()
+
+    # Save the plot to a file
+    image_filename = f"{chosen_night['date'].strftime('%Y-%m-%d')}_sleep_plot.png"
+    image_path = os.path.join(UPLOAD_FOLDER, image_filename)
+    plt.savefig(image_path)
     plt.close()
 
-    print(f"Total sleep time: {total_sleep_hours:.2f} hours")
+    return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
 
-    # Run the app
-    if __name__ == '__main__':
-        app.run(debug=True)
+
+# Route to handle the homepage and show data for a specific night
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        chosen_day = request.form['chosen_day']
+        chosen_day = datetime.strptime(chosen_day, "%Y-%m-%d")
+
+        # Find the index of the chosen day
+        chosen_night_index = next((index for index, day in enumerate(sleep_data) if day["date"] == chosen_day), None)
+
+        if chosen_night_index is not None:
+            image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night = generate_sleep_plot(
+                chosen_night_index)
+
+            # Descriptive statistics for the last 7 nights (excluding the current day)
+            total_sleep_durations = []
+            total_wake_ups = []
+
+            for i in range(max(0, chosen_night_index - 7), chosen_night_index):
+                night_data = sleep_data[i]
+                bedtime = night_data["bedtime"]
+                wake_time = night_data["wake_time"]
+                sound_events = night_data["sound_events"]
+
+                # Create time axis for the current night
+                time_axis = [bedtime + timedelta(minutes=i) for i in range(int((wake_time - bedtime).seconds / 60))]
+
+                # Initialize sleep state (1 = Sleeping, 0 = Awake)
+                sleep_state = np.ones(len(time_axis))
+
+                # Mark awake periods during sound events
+                for event in sound_events:
+                    event_time = event["time"]
+                    start_index = max(0, (event_time - bedtime).seconds // 60)
+                    end_index = min(len(sleep_state), start_index + int(event["duration"]))
+                    sleep_state[start_index:end_index] = 0
+
+                    # Gradually transition back to sleep
+                    transition_duration = 15  # 15 minutes for transition
+                    transition_end_index = min(len(sleep_state), end_index + transition_duration)
+                    transition_range = np.linspace(0, 1, transition_end_index - end_index)
+                    sleep_state[end_index:transition_end_index] = transition_range
+
+                # Calculate the total sleep time (time spent in sleep state = 1)
+                sleep_times = np.array(time_axis)[sleep_state == 1]
+                total_sleep_duration = len(sleep_times) * 60  # in seconds
+                total_sleep_durations.append(total_sleep_duration)
+                total_wake_ups.append(len(sound_events))  # Each sound event represents a wake-up
+
+            # Convert total sleep durations from seconds to hours for descriptive statistics
+            mean_sleep_duration = np.mean(total_sleep_durations) / 3600  # in hours
+            median_sleep_duration = np.median(total_sleep_durations) / 3600  # in hours
+            std_sleep_duration = np.std(total_sleep_durations) / 3600  # in hours
+
+            # Calculate Pearson correlation between wake-ups and total sleep duration
+            correlation_sleep_wake_up, _ = pearsonr(total_wake_ups, total_sleep_durations)
+
+            return render_template('index.html',
+                                   chosen_night=chosen_night,
+                                   image_filename=image_filename,
+                                   total_sleep_hours=total_sleep_hours,
+                                   total_sleep_minutes=total_sleep_minutes,
+                                   adjusted_sleep_hours=adjusted_sleep_hours,
+                                   adjusted_sleep_minutes=adjusted_sleep_minutes,
+                                   mean_sleep_duration=mean_sleep_duration,
+                                   median_sleep_duration=median_sleep_duration,
+                                   std_sleep_duration=std_sleep_duration,
+                                   correlation_sleep_wake_up=correlation_sleep_wake_up)
+
+    return render_template('index.html')
+
+
+# Run the app
+if __name__ == '__main__':
+    app.run(debug=True)
