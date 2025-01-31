@@ -111,19 +111,21 @@ def index():
             # Calculate Pearson correlation between wake-ups and total sleep duration
             correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
 
-            return render_template('index.html',
-                                   chosen_night=chosen_night,
-                                   image_filename=image_filename,
-                                   total_sleep_hours=total_sleep_hours,
-                                   total_sleep_minutes=total_sleep_minutes,
-                                   adjusted_sleep_hours=adjusted_sleep_hours,
-                                   adjusted_sleep_minutes=adjusted_sleep_minutes,
-                                   mean_sleep_duration=mean_sleep_duration,
-                                   median_sleep_duration=median_sleep_duration,
-                                   std_sleep_duration=std_sleep_duration,
-                                   correlation_sleep_wake_up=correlation_sleep_wake_up,
-                                   p_value=p_value,
-                                   received_events=received_events)
+return render_template(
+    'index.html',
+    chosen_night=chosen_night,
+    image_filename=image_filename,
+    total_sleep_hours=total_sleep_hours,
+    total_sleep_minutes=total_sleep_minutes,
+    adjusted_sleep_hours=adjusted_sleep_hours,
+    adjusted_sleep_minutes=adjusted_sleep_minutes,
+    mean_sleep_duration=mean_sleep_duration,
+    median_sleep_duration=median_sleep_duration,
+    std_sleep_duration=std_sleep_duration,
+    correlation_sleep_wake_up=correlation_sleep_wake_up,
+    p_value=p_value,
+    received_events=received_events
+)
 
     return render_template('index.html', received_events=received_events)
 
