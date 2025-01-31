@@ -84,7 +84,6 @@
 
     <h1>Sleep Data for the Night</h1>
     
-    <!-- Date Picker Form -->
     <form action="/" method="POST">
         <label for="chosen_day">Select a Day:</label>
         <input type="date" id="chosen_day" name="chosen_day" required>
@@ -107,29 +106,34 @@
             <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
         </div>
 
-        <!-- Hypothesis Test Results -->
         <div class="hypothesis-test">
             <h3>Hypothesis Test Results</h3>
             <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
             <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
-            <p><strong>Test Statistic (Pearson Correlation):</strong> {{ correlation_sleep_wake_up | round(2) }}</p>
-            <p><strong>P-Value:</strong> <span>{{ p_value if p_value is not none else 'N/A' }}</span></p>
-            <p><strong>Conclusion:</strong> 
-                {% if received_events and received_events[-1].p_value < 0.05 %}
-                    The baby is awake. The result is statistically significant, and we reject the null hypothesis.
+            
+            <!-- Display Amplitude -->
+            <p><strong>Amplitude:</strong> 
+                {% if received_events %}
+                    {{ received_events[-1].amplitude }}
                 {% else %}
-                    The baby is asleep. The result is not statistically significant, and we fail to reject the null hypothesis.
+                    No events received yet.
+                {% endif %}
+            </p>
+
+            <p><strong>Conclusion:</strong> 
+                {% if received_events and received_events[-1].amplitude > 0 %}
+                    The baby is awake. The amplitude is greater than zero, so we reject the null hypothesis.
+                {% else %}
+                    The baby is asleep. The amplitude is zero, so we fail to reject the null hypothesis.
                 {% endif %}
             </p>
         </div>
 
-        <!-- Latest Received Event -->
         <div class="received-event">
             <h3>Latest Received Event</h3>
             {% if received_events %}
                 <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
                 <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
-                <p><strong>P-Value:</strong> {{ received_events[-1].p_value }}</p>
                 <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
             {% else %}
                 <p>No events received yet.</p>
