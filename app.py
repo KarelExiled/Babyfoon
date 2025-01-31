@@ -88,6 +88,7 @@ def index():
                     event_time = event["time"]
                     start_index = max(0, (event_time - bedtime).seconds // 60)
                     end_index = min(len(sleep_state), start_index + int(event["duration"]))
+
                     sleep_state[start_index:end_index] = 0
 
                     # Gradually transition back to sleep
@@ -108,10 +109,11 @@ def index():
             std_sleep_duration = np.std(total_sleep_durations) / 3600  # in hours
 
             # Calculate Pearson correlation between wake-ups and total sleep duration
-            correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
+            correlation_sleep_wake_up, _ = pearsonr(total_wake_ups, total_sleep_durations)
 
             # Get the latest received event (if any)
             received_event = received_events[-1] if received_events else None
+            latest_p_value = received_event['p_value'] if received_event else None
 
             return render_template(
                 'index.html',
@@ -125,7 +127,7 @@ def index():
                 median_sleep_duration=median_sleep_duration,
                 std_sleep_duration=std_sleep_duration,
                 correlation_sleep_wake_up=correlation_sleep_wake_up,
-                p_value=p_value,
+                p_value=latest_p_value,  # pass the latest p-value from received events
                 received_event=received_event,  # pass the latest event
                 received_events=received_events
             )
@@ -204,23 +206,17 @@ def generate_sleep_plot(chosen_night_index):
     plt.xlabel("Time")
     plt.ylabel("Sleep State (1 = Sleeping, 0 = Awake)")
     plt.yticks([0, 1], ["Awake", "Sleeping"])
-    plt.grid(True, linestyle="--", alpha=0.6)
-    plt.legend()
-
-    # Format x-axis to show time only
-    time_formatter = mdates.DateFormatter("%H:%M")
-    plt.gca().xaxis.set_major_formatter(time_formatter)
-
-    # Rotate time labels for readability
-    plt.gcf().autofmt_xdate()
+    plt.grid(True, linestyle="--", alpha=0.7)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
 
     # Save the plot to a file
-    image_filename = f"{chosen_night['date'].strftime('%Y-%m-%d')}_sleep_plot.png"
-    image_path = os.path.join(UPLOAD_FOLDER, image_filename)
+    filename = f"sleep_plot_{chosen_night['date'].strftime('%Y%m%d')}.png"
+    image_path = os.path.join(UPLOAD_FOLDER, filename)
     plt.savefig(image_path)
     plt.close()
 
-    return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
+    return filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
 
 if __name__ == '__main__':
     app.run(debug=True)
