@@ -218,6 +218,5 @@ def generate_sleep_plot(chosen_night_index):
 
     return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
 
-
 if __name__ == '__main__':
     app.run(debug=True)
