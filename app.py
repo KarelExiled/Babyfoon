@@ -123,9 +123,10 @@ def index():
                 std_sleep_duration=std_sleep_duration,
                 correlation_sleep_wake_up=correlation_sleep_wake_up,
                 p_value=p_value,
-                received_events=received_events
+                received_events=received_events  # Make sure this is included
             )
 
+    # Make sure to also pass 'received_events' when rendering the template for GET requests
     return render_template('index.html', received_events=received_events)
 
 # Function to generate random sound events for a night
@@ -217,6 +218,7 @@ def generate_sleep_plot(chosen_night_index):
     plt.close()
 
     return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
+
 
 if __name__ == '__main__':
     app.run(debug=True)
