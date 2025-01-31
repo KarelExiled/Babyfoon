@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
@@ -19,6 +19,18 @@ wake_time_fixed = datetime(2025, 1, 22, 9, 0)  # 09:00 (9:00 AM)
 UPLOAD_FOLDER = 'static/images'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Store received events
+received_events = []
+
+# Function to process received event data
+def process_received_event(event_type, amplitude, p_value):
+    event_data = {
+        "timestamp": datetime.now().isoformat(),
+        "event_type": event_type,
+        "amplitude": amplitude,
+        "p_value": p_value
+    }
+    received_events.append(event_data)
 
 # Function to generate random sound events for a night
 def generate_sound_events(bedtime, wake_time):
@@ -168,7 +180,7 @@ def index():
             std_sleep_duration = np.std(total_sleep_durations) / 3600  # in hours
 
             # Calculate Pearson correlation between wake-ups and total sleep duration
-            correlation_sleep_wake_up, _ = pearsonr(total_wake_ups, total_sleep_durations)
+            correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
 
             return render_template('index.html',
                                    chosen_night=chosen_night,
@@ -180,9 +192,30 @@ def index():
                                    mean_sleep_duration=mean_sleep_duration,
                                    median_sleep_duration=median_sleep_duration,
                                    std_sleep_duration=std_sleep_duration,
-                                   correlation_sleep_wake_up=correlation_sleep_wake_up)
+                                   correlation_sleep_wake_up=correlation_sleep_wake_up,
+                                   p_value=p_value,
+                                   received_events=received_events)
 
-    return render_template('index.html')
+    return render_template('index.html', received_events=received_events)
+
+
+# Route to handle receiving data (POST)
+@app.route('/receive_data', methods=['POST'])
+def receive_data():
+    try:
+        data = request.get_json()  # Expecting JSON data
+        event_type = data.get("event_type")
+        amplitude = data.get("amplitude")
+        p_value = data.get("p_value")
+
+        if event_type and amplitude and p_value:
+            # Process the received event data
+            process_received_event(event_type, amplitude, p_value)
+            return jsonify({"status": "success", "message": "Data received!"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Missing required fields!"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # Run the app
