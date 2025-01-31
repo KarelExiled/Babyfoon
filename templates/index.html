@@ -9,9 +9,11 @@
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
+            background-color: #f4f4f4;
         }
         h1 {
             color: #333;
+            font-size: 28px;
         }
         .content {
             margin-top: 20px;
@@ -19,10 +21,15 @@
         img {
             max-width: 100%;
             height: auto;
+            margin-top: 20px;
         }
         .stats {
             margin-top: 40px;
             font-size: 18px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         form {
             margin: 20px 0;
@@ -31,6 +38,8 @@
             font-size: 16px;
             padding: 10px;
             margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         button {
             font-size: 16px;
@@ -39,9 +48,35 @@
             color: white;
             border: none;
             cursor: pointer;
+            border-radius: 4px;
         }
         button:hover {
             background-color: #45a049;
+        }
+        .stats h2 {
+            margin-bottom: 20px;
+        }
+        .stats p {
+            margin: 10px 0;
+        }
+        .hypothesis-test {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .hypothesis-test h3 {
+            margin-top: 0;
+        }
+        .received-event {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9f7ef;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .received-event p {
+            margin: 8px 0;
         }
     </style>
 </head>
@@ -70,8 +105,10 @@
             <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
             <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
             <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
-            
-            <!-- Hypothesis Test Results -->
+        </div>
+
+        <!-- Hypothesis Test Results -->
+        <div class="hypothesis-test">
             <h3>Hypothesis Test Results</h3>
             <p><strong>Null Hypothesis (H0):</strong> There is no significant correlation between the number of wake-ups and total sleep duration.</p>
             <p><strong>Alternative Hypothesis (H1):</strong> There is a significant correlation between the number of wake-ups and total sleep duration.</p>
@@ -80,22 +117,19 @@
             <p><strong>Conclusion:</strong> {% if p_value < 0.05 %}The result is statistically significant, and we reject the null hypothesis.{% else %}The result is not statistically significant, and we fail to reject the null hypothesis.{% endif %}</p>
         </div>
 
-        <!-- Display received events -->
-        <div class="received-events">
-            <h2>Received Events</h2>
-            <ul>
-                {% for event in received_events %}
-                    <li>
-                        <strong>Event Type:</strong> {{ event['event_type'] }}<br>
-                        <strong>Amplitude:</strong> {{ event['amplitude'] }}<br>
-                        <strong>P-Value:</strong> {{ event['p_value'] }}<br>
-                        <strong>Timestamp:</strong> {{ event['timestamp'] }}<br>
-                    </li>
-                {% endfor %}
-            </ul>
+        <!-- Latest Received Event -->
+        <div class="received-event">
+            <h3>Latest Received Event</h3>
+            {% if received_events %}
+                <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
+                <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
+                <p><strong>P-Value:</strong> {{ received_events[-1].p_value }}</p>
+                <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
+            {% else %}
+                <p>No events received yet.</p>
+            {% endif %}
         </div>
-    {% else %}
-        <p>No events received yet.</p>
     {% endif %}
+
 </body>
 </html>
