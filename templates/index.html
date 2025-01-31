@@ -56,21 +56,22 @@
         <button type="submit">Show Data</button>
     </form>
     
-    
+    {% if chosen_night %}
         <div class="content">
-            <h2>Sleep Data for Jan 27, 2025</h2>
-            <img id="sleep-plot" src="/static/images/2025-01-27_sleep_plot.png" alt="Sleep Data Plot">
+            <h2>Sleep Data for {{ chosen_night['date'].strftime('%b %d, %Y') }}</h2>
+            <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Data Plot">
         </div>
 
         <div class="stats">
             <h2>Descriptive Statistics</h2>
-            <p>Total Sleep Duration: <strong>12 hours and 36 minutes</strong></p>
-            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>11.81 hours</strong></p>
-            <p>Median Total Sleep Duration (Last 7 Nights): <strong>11.93 hours</strong></p>
-            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>0.76 hours</strong></p>
-            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>-0.8</strong></p>
+            <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
+            <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
+            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
+            <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
+            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
+            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
         </div>
-    
+    {% endif %}
 
 </body>
 </html>
