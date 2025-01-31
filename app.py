@@ -53,7 +53,6 @@ def receive_data():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
 # Route to handle the homepage and show data for a specific night
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -111,24 +110,23 @@ def index():
             # Calculate Pearson correlation between wake-ups and total sleep duration
             correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
 
-return render_template(
-    'index.html',
-    chosen_night=chosen_night,
-    image_filename=image_filename,
-    total_sleep_hours=total_sleep_hours,
-    total_sleep_minutes=total_sleep_minutes,
-    adjusted_sleep_hours=adjusted_sleep_hours,
-    adjusted_sleep_minutes=adjusted_sleep_minutes,
-    mean_sleep_duration=mean_sleep_duration,
-    median_sleep_duration=median_sleep_duration,
-    std_sleep_duration=std_sleep_duration,
-    correlation_sleep_wake_up=correlation_sleep_wake_up,
-    p_value=p_value,
-    received_events=received_events
-)
+            return render_template(
+                'index.html',
+                chosen_night=chosen_night,
+                image_filename=image_filename,
+                total_sleep_hours=total_sleep_hours,
+                total_sleep_minutes=total_sleep_minutes,
+                adjusted_sleep_hours=adjusted_sleep_hours,
+                adjusted_sleep_minutes=adjusted_sleep_minutes,
+                mean_sleep_duration=mean_sleep_duration,
+                median_sleep_duration=median_sleep_duration,
+                std_sleep_duration=std_sleep_duration,
+                correlation_sleep_wake_up=correlation_sleep_wake_up,
+                p_value=p_value,
+                received_events=received_events
+            )
 
     return render_template('index.html', received_events=received_events)
-
 
 # Function to generate random sound events for a night
 def generate_sound_events(bedtime, wake_time):
@@ -154,7 +152,6 @@ for day in range(28):
     wake_time = wake_time_fixed
     sound_events = generate_sound_events(bedtime, wake_time)
     sleep_data.append({"date": date, "bedtime": bedtime, "wake_time": wake_time, "sound_events": sound_events})
-
 
 # Function to process sleep data and generate plot
 def generate_sleep_plot(chosen_night_index):
