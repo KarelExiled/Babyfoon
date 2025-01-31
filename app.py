@@ -110,6 +110,9 @@ def index():
             # Calculate Pearson correlation between wake-ups and total sleep duration
             correlation_sleep_wake_up, p_value = pearsonr(total_wake_ups, total_sleep_durations)
 
+            # Get the latest received event (if any)
+            received_event = received_events[-1] if received_events else None
+
             return render_template(
                 'index.html',
                 chosen_night=chosen_night,
@@ -123,10 +126,10 @@ def index():
                 std_sleep_duration=std_sleep_duration,
                 correlation_sleep_wake_up=correlation_sleep_wake_up,
                 p_value=p_value,
-                received_events=received_events  # Make sure this is included
+                received_event=received_event,  # pass the latest event
+                received_events=received_events
             )
 
-    # Make sure to also pass 'received_events' when rendering the template for GET requests
     return render_template('index.html', received_events=received_events)
 
 # Function to generate random sound events for a night
@@ -218,7 +221,6 @@ def generate_sleep_plot(chosen_night_index):
     plt.close()
 
     return image_filename, total_sleep_hours, total_sleep_minutes, adjusted_sleep_hours, adjusted_sleep_minutes, chosen_night
-
 
 if __name__ == '__main__':
     app.run(debug=True)
