@@ -164,7 +164,7 @@ def generate_sound_events(bedtime, wake_time):
 start_date = datetime(2025, 1, 1)
 sleep_data = []
 
-for day in range(28):
+for day in range(34):
     date = start_date + timedelta(days=day)
     bedtime = bedtime_fixed
     wake_time = wake_time_fixed
