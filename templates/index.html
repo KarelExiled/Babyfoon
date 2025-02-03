@@ -1,145 +1,381 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sleep Data Visualization</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-            font-size: 28px;
-        }
-        .content {
-            margin-top: 20px;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            margin-top: 20px;
-        }
-        .stats {
-            margin-top: 40px;
-            font-size: 18px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        form {
-            margin: 20px 0;
-        }
-        input[type="date"] {
-            font-size: 16px;
-            padding: 10px;
-            margin: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            font-size: 16px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .stats h2 {
-            margin-bottom: 20px;
-        }
-        .stats p {
-            margin: 10px 0;
-        }
-        .hypothesis-test {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .hypothesis-test h3 {
-            margin-top: 0;
-        }
-        .received-event {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #e9f7ef;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .received-event p {
-            margin: 8px 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Babyfoon Plus - Advanced Baby Monitoring Solution</title>
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --secondary-color: #2C3E50;
+      --accent-color: #27AE60;
+      --background-color: #F5F6FA;
+      --text-color: #2C3E50;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--background-color);
+    }
+
+    header {
+      background-color: white;
+      box-shadow: var(--card-shadow);
+      position: fixed;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text-color);
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--primary-color);
+    }
+
+    main {
+      padding-top: 80px;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      z-index: 1;
+      max-width: 800px;
+      padding: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      border-radius: 30px;
+      margin-top: 2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .feature-card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    footer {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 3rem 2rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-section h4 {
+      margin-bottom: 1rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section a {
+      color: white;
+      text-decoration: none;
+    }
+
+    /* Sleep Data Visualization */
+    .content {
+      margin-top: 20px;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+
+    .stats {
+      margin-top: 40px;
+      font-size: 18px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    form {
+      margin: 20px 0;
+    }
+
+    input[type="date"] {
+      font-size: 16px;
+      padding: 10px;
+      margin: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .stats h2 {
+      margin-bottom: 20px;
+    }
+
+    .stats p {
+      margin: 10px 0;
+    }
+
+    .hypothesis-test {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .hypothesis-test h3 {
+      margin-top: 0;
+    }
+
+    .received-event {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #e9f7ef;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .received-event p {
+      margin: 8px 0;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Sleep Data for the Night</h1>
+<header>
+  <nav>
+    <div class="logo">
+      <svg width="40" height="40" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="#4A90E2"/>
+        <path d="M20 10C15 10 11 14 11 19C11 24 15 28 20 28C25 28 29 24 29 19" stroke="white" fill="none" stroke-width="2"/>
+        <circle cx="20" cy="19" r="4" fill="white"/>
+      </svg>
+      <span>Babyfoon Plus</span>
+    </div>
+    <ul>
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#technical">Technical</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Welcome to Babyfoon Plus</h1>
+      <p>Your advanced baby monitoring solution. Track your baby's sleep, sound events, and more with ease.</p>
+      <a href="#features" class="cta-button">Explore Features</a>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section id="features">
+    <h2>Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Advanced Dashboard</h4>
+        <p>View your baby's sleep patterns, sound events, and sleep metrics in a detailed dashboard.</p>
+      </div>
+      <div class="feature-card">
+        <h4>Sound Analysis</h4>
+        <p>Classify and track different sounds your baby makes during sleep, including crying and cooing.</p>
+      </div>
+      <div class="feature-card">
+        <h4>Nightly Overview</h4>
+        <p>Get a detailed report of your baby's sleep and sound events for each night, including any disruptions.</p>
+      </div>
+    </div>
+  </section>
+
+  <h1>Sleep Data for the Night</h1>
     
-    <form action="/" method="POST">
-        <label for="chosen_day">Select a Day:</label>
-        <input type="date" id="chosen_day" name="chosen_day" required>
-        <button type="submit">Show Data</button>
-    </form>
-    
-    {% if chosen_night %}
-        <div class="content">
-            <h2>Sleep Data for {{ chosen_night['date'].strftime('%b %d, %Y') }}</h2>
-            <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Data Plot">
-        </div>
+  <form action="/" method="POST">
+      <label for="chosen_day">Select a Day:</label>
+      <input type="date" id="chosen_day" name="chosen_day" required>
+      <button type="submit">Show Data</button>
+  </form>
+  
+  {% if chosen_night %}
+      <div class="content">
+          <h2>Sleep Data for {{ chosen_night['date'].strftime('%b %d, %Y') }}</h2>
+          <img id="sleep-plot" src="{{ url_for('static', filename='images/' + image_filename) }}" alt="Sleep Data Plot">
+      </div>
 
-        <div class="stats">
-            <h2>Descriptive Statistics</h2>
-            <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
-            <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
-            <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
-            <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
-            <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
-            <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
-        </div>
+      <div class="stats">
+          <h2>Descriptive Statistics</h2>
+          <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
+          <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
+          <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
+          <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
+          <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
+          <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
+      </div>
 
-        <div class="hypothesis-test">
-            <h3>Hypothesis Test Results</h3>
-            <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
-            <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
-            
-            <!-- Display Amplitude -->
-            <p><strong>Amplitude:</strong> 
-                {% if received_events %}
-                    {{ received_events[-1].amplitude }}
-                {% else %}
-                    No events received yet.
-                {% endif %}
-            </p>
+      <div class="hypothesis-test">
+          <h3>Hypothesis Test Results</h3>
+          <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep. Amplitude = 0.</p>
+          <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake. Amplitude > 0.</p>
+          
+          <!-- Display Amplitude -->
+          <p><strong>Amplitude:</strong> 
+              {% if received_events %}
+                  {{ received_events[-1].amplitude }}
+              {% else %}
+                  No events received yet.
+              {% endif %}
+          </p>
 
-            <p><strong>Conclusion:</strong> 
-                {% if received_events and received_events[-1].amplitude > 0 %}
-                    The baby is awake. The amplitude is greater than zero, so we reject the null hypothesis.
-                {% else %}
-                    The baby is asleep. The amplitude is zero, so we fail to reject the null hypothesis.
-                {% endif %}
-            </p>
-        </div>
+          <p><strong>Conclusion:</strong> 
+              {% if received_events and received_events[-1].amplitude > 0 %}
+                  The baby is awake. The amplitude is greater than zero, so we reject the null hypothesis.
+              {% else %}
+                  The baby is asleep. The amplitude is zero, so we fail to reject the null hypothesis.
+              {% endif %}
+          </p>
+      </div>
 
-        <div class="received-event">
-            <h3>Latest Received Event</h3>
-            {% if received_events %}
-                <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
-                <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
-                <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
-            {% else %}
-                <p>No events received yet.</p>
-            {% endif %}
-        </div>
-    {% endif %}
+      <div class="received-event">
+          <h3>Latest Received Event</h3>
+          {% if received_events %}
+              <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
+              <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
+              <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
+          {% else %}
+              <p>No events received yet.</p>
+          {% endif %}
+      </div>
+  {% endif %}
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:contact@babyfoonplus.com">contact@babyfoonplus.com</a></li>
+        <li><a href="#contact">Contact Form</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
