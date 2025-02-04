@@ -312,6 +312,7 @@
       <div class="stats">
           <h2>Descriptive Statistics</h2>
           <p>Total Sleep Duration: <strong>{{ total_sleep_hours }} hours and {{ total_sleep_minutes }} minutes</strong></p>
+          <p>Adjusted Sleep Duration (without sound events): <strong>{{ adjusted_sleep_hours }} hours and {{ adjusted_sleep_minutes }} minutes</strong></p>
           <p>Mean Total Sleep Duration (Last 7 Nights): <strong>{{ mean_sleep_duration | round(2) }} hours</strong></p>
           <p>Median Total Sleep Duration (Last 7 Nights): <strong>{{ median_sleep_duration | round(2) }} hours</strong></p>
           <p>Standard Deviation of Sleep Duration (Last 7 Nights): <strong>{{ std_sleep_duration | round(2) }} hours</strong></p>
@@ -319,27 +320,51 @@
       </div>
 
       <div class="hypothesis-test">
-          <h3>Hypothesis Test Results</h3>
-          <p><strong>Null Hypothesis (H0):</strong> The Baby is asleep.</p>
-          <p><strong>Alternative Hypothesis (H1):</strong> The Baby is awake.</p>
-          
-          <!-- Display Amplitude -->
-          <p><strong>Amplitude:</strong> 
-              {% if received_events %}
-                  {{ received_events[-1].amplitude }}
-              {% else %}
-                  No events received yet.
-              {% endif %}
-          </p>
-
-          <p><strong>Conclusion:</strong> 
-              {% if received_events and received_events[-1].amplitude > 0 %}
-                  The baby is awake. The amplitude is greater than zero, so we reject the null hypothesis.
-              {% else %}
-                  The baby is asleep. The amplitude is zero, so we fail to reject the null hypothesis.
-              {% endif %}
-          </p>
-      </div>
+        <h3>Hypothesis Test Results</h3>
+        <p><strong>Null Hypothesis (H0):</strong> The baby is asleep. Amplitude ≤ 300.</p>
+        <p><strong>Alternative Hypothesis (H1):</strong> The baby is awake. Amplitude > 300.</p>
+        
+        <!-- Display Amplitude -->
+        <p><strong>Amplitude:</strong> 
+            {% if received_events %}
+                {{ received_events[-1].amplitude }}
+            {% else %}
+                No events received yet.
+            {% endif %}
+        </p>
+        
+        <!-- Hypothesis Testing with Alpha -->
+        <p><strong>Significance Level (α):</strong> 0.05</p>
+        
+        {% if received_events %}
+            {% set amplitude = received_events[-1].amplitude %}
+            {% set alpha = 0.05 %}
+            {% set threshold = 300 %}
+            
+            <!-- Perform Hypothesis Test -->
+            <p><strong>Test Statistic:</strong> Amplitude = {{ amplitude }}</p>
+            
+            <p><strong>Critical Value:</strong> {{ threshold }}</p>
+            
+            <p><strong>P-Value Approximation:</strong> 
+                {% if amplitude > threshold %}
+                    Less than α (Reject H0)
+                {% else %}
+                    Greater than α (Fail to reject H0)
+                {% endif %}
+            </p>
+            
+            <p><strong>Conclusion:</strong> 
+                {% if amplitude > threshold %}
+                    The baby is awake. The amplitude is greater than 300, so we reject the null hypothesis at α = 0.05.
+                {% else %}
+                    The baby is asleep. The amplitude is 300 or less, so we fail to reject the null hypothesis at α = 0.05.
+                {% endif %}
+            </p>
+        {% else %}
+            <p>No events received yet.</p>
+        {% endif %}
+    </div>
 
       <div class="received-event">
           <h3>Latest Received Event</h3>
