@@ -319,59 +319,60 @@
           <p>Correlation between Wake-Ups and Total Sleep Duration: <strong>{{ correlation_sleep_wake_up | round(2) }}</strong></p>
       </div>
 
-<div class="hypothesis-test">
-    <h3>Hypothesis Test Results</h3>
-    <p><strong>Null Hypothesis (H0):</strong> The baby is asleep. Amplitude ≤ 300.</p>
-    <p><strong>Alternative Hypothesis (H1):</strong> The baby is awake. Amplitude > 300.</p>
-    
-    <!-- Display Amplitude -->
-    <p><strong>Amplitude:</strong> 
-        {% if received_events %}
-            {{ received_events[-1].amplitude }}
-        {% else %}
-            No events received yet.
-        {% endif %}
-    </p>
-    
-    <!-- Hypothesis Testing with Alpha -->
-    <p><strong>Significance Level (α):</strong> 0.05</p>
-    
-    {% if received_events %}
-        {% set amplitude = received_events[-1].amplitude %}
-        {% set alpha = 0.05 %}
-        {% set threshold = 300 %}
-        {% set p_value = 0.1 %} <!-- Assume p-value comes from an external source -->
+      <div class="hypothesis-test">
+        <h3>Hypothesis Test Results</h3>
+        <p><strong>Null Hypothesis (H0):</strong> The baby is asleep. Amplitude ≤ 300.</p>
+        <p><strong>Alternative Hypothesis (H1):</strong> The baby is awake. Amplitude > 300.</p>
         
-        <!-- Perform Hypothesis Test -->
-        <p><strong>Test Statistic:</strong> Amplitude = {{ amplitude }}</p>
-        
-        <p><strong>Critical Value:</strong> {{ threshold }}</p>
-        
-        <p><strong>P-Value:</strong> {{ p_value }}</p>
-        
-        <p><strong>Conclusion:</strong> 
-            {% if p_value < alpha %}
-                The baby is awake. The p-value is less than α, so we reject the null hypothesis.
+        <!-- Display Amplitude -->
+        <p><strong>Amplitude:</strong> 
+            {% if received_events %}
+                {{ received_events[-1].amplitude }}
             {% else %}
-                The baby is asleep. The p-value is greater than α, so we fail to reject the null hypothesis.
+                No events received yet.
             {% endif %}
         </p>
-    {% else %}
-        <p>No events received yet.</p>
-    {% endif %}
-</div>
-
-<div class="received-event">
-    <h3>Latest Received Event</h3>
-    {% if received_events %}
-        <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
-        <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
-        <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
-    {% else %}
-        <p>No events received yet.</p>
-    {% endif %}
-</div>
-
+        
+        <!-- Hypothesis Testing with Alpha -->
+        <p><strong>Significance Level (α):</strong> 0.05</p>
+        
+        {% if received_events %}
+            {% set amplitude = received_events[-1].amplitude %}
+            {% set alpha = 0.05 %}
+            {% set threshold = 300 %}
+            {% set p_value = received_events[-1].p_value %}
+            
+            <!-- Perform Hypothesis Test -->
+            <p><strong>Test Statistic:</strong> Amplitude = {{ amplitude }}</p>
+            
+            <p><strong>Critical Value:</strong> {{ threshold }}</p>
+            
+            <p><strong>P-Value:</strong> {{ p_value }}</p>
+            
+            <p><strong>Conclusion:</strong> 
+                {% if p_value < alpha %}
+                    The baby is awake. The p-value is less than α, so we reject the null hypothesis.
+                {% else %}
+                    The baby is asleep. The p-value is greater than α, so we fail to reject the null hypothesis.
+                {% endif %}
+            </p>
+        {% else %}
+            <p>No events received yet.</p>
+        {% endif %}
+    </div>
+    
+    <div class="received-event">
+        <h3>Latest Received Event</h3>
+        {% if received_events %}
+            <p><strong>Event Type:</strong> {{ received_events[-1].event_type }}</p>
+            <p><strong>Amplitude:</strong> {{ received_events[-1].amplitude }}</p>
+            <p><strong>P-Value:</strong> {{ received_events[-1].p_value }}</p>
+            <p><strong>Timestamp:</strong> {{ received_events[-1].timestamp }}</p>
+        {% else %}
+            <p>No events received yet.</p>
+        {% endif %}
+    </div>
+    
   {% endif %}
   </section>
 
